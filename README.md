@@ -43,10 +43,10 @@ Helps users track and respond to daily readings from a yearly Bible plan.
     ```bash
    composer run dev
 
-## Requirements
+## Features
 - Reading plan customization
 - Daily reading tracker
 - Progress statistics
 
-## Requirements
+## License
 [MIT](LICENSE) `

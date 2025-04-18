@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Day;
+use App\Models\Role;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +14,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Create a super admin user
+        $user = User::factory()->create([
+            'name' => 'Miguel',
+            'email' => 'mmenchu@reydereyestotonicapan.org',
         ]);
+        $role = Role::where('name', 'super_admin')->first()
+            ?? Role::factory()->create();
+        $user->assignRole($role);
+
+        Day::factory()->create();
     }
 }

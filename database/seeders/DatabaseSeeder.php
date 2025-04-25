@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Answer;
 use App\Models\Day;
+use App\Models\Question;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -23,6 +26,30 @@ class DatabaseSeeder extends Seeder
             ?? Role::factory()->create();
         $user->assignRole($role);
 
-        Day::factory()->create();
+        // Create first question with its answers
+        $day = Day::factory()->create();
+
+        $question1 = Question::factory()
+            ->for($day)
+            ->state([
+                "question" => "¿Quién fué el hijo primogenito de Isaac?"
+            ])
+            ->create();
+
+        Answer::factory()
+            ->for($question1)
+            ->createMany([
+                ["description" => "Esaú", "is_correct" => true],
+                ["description" => "Jacob", "is_correct" => false],
+                ["description" => "Abraham", "is_correct" => false]
+            ]);
+
+        // Create second question without answers
+        $question2 = Question::factory()
+            ->for($day)
+            ->state([
+                "question" => "¿Qué le pareció la lectura del día de hoy?"
+            ])
+            ->create();
     }
 }

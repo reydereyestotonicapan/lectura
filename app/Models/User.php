@@ -46,4 +46,12 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::created(function ($user) {
+            $defaultRoleName = config('app.default_user_role');
+            $user->assignRole($defaultRoleName);
+        });
+    }
 }

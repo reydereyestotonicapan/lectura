@@ -9,6 +9,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +18,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        Role::where('name', 'default_user')->first()
+            ?? Role::factory()->create([
+                'name' => 'default_user',
+            ]);
+
         // Create a super admin user
         $user = User::factory()->create([
             'name' => 'Miguel',
@@ -25,6 +31,27 @@ class DatabaseSeeder extends Seeder
         $role = Role::where('name', 'super_admin')->first()
             ?? Role::factory()->create();
         $user->assignRole($role);
+        //TODO create permissions and call to permission seeder
+        $superAdminPermissions = [
+            'view_any_day',
+            'create_day',
+            'update_day',
+            'delete_day',
+            'view_any_role',
+            'create_role',
+            'update_role',
+            'delete_role',
+            'view_any_user',
+            'create_user',
+            'update_user',
+            'delete_user',
+        ];
+        foreach($superAdminPermissions as $permission)
+        {
+            Permission::findOrCreate($permission);
+        }
+        $permissionModels = Permission::whereIn('name', $superAdminPermissions)->get();
+        $role->givePermissionTo($permissionModels);
 
         // Create first question with its answers
         $day = Day::factory()->create();
@@ -51,5 +78,10 @@ class DatabaseSeeder extends Seeder
                 "question" => "¿Qué le pareció la lectura del día de hoy?"
             ])
             ->create();
+
+        //call to Admin seeder
+        $this->call([
+            ShieldSeeder::class
+        ]);
     }
 }

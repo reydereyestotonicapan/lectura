@@ -14,6 +14,9 @@ class PermissionsSeeder extends Seeder
             'view_any_question',
             'create_question',
             'update_question',
+            'page_DailyResponse',
+            'view_any_user',
+            'update_user',
         ];
 
         foreach ($relationManagerPermissions as $permission) {
@@ -36,5 +39,9 @@ class PermissionsSeeder extends Seeder
         // Assign permissions to roles
         $superAdminRole->givePermissionTo($permissionModels);
         $adminRole->givePermissionTo($permissionModels);
+
+        $this->call([
+            DefaultUserSeeder::class
+        ]);
     }
 }

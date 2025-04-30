@@ -41,10 +41,9 @@ class DailyResponse extends Page implements HasForms, HasActions
     {
         $userId = auth()->user()->id;
         $daysAsIdAndMonth = self::getDaysAsIdAndDayMonth();
-        $dayDefault = $daysAsIdAndMonth->keys()->first();
         $this->form->fill([
-            'day_id' => $dayDefault,
-            'questions' => self::getQuestionsForDayAndUser($dayDefault, $userId),
+            'day_id' => null,
+            'questions' => self::getQuestionsForUser($userId),
             'daysAsIdAndMonth' => $daysAsIdAndMonth,
             'user_id' => $userId,
         ]);
@@ -52,6 +51,11 @@ class DailyResponse extends Page implements HasForms, HasActions
     private static function getQuestionsForDayAndUser(int $dayId, $userId): array
     {
         $questionsByDay = self::getQuestionsByDayNotPresentInResponsesForTheUser($dayId, $userId);
+        return self::addQuestionIdAndUserIdToQuestionsByDay($questionsByDay, $userId)->toArray();
+    }
+    private static function getQuestionsForUser($userId): array
+    {
+        $questionsByDay = self::getQuestionsNotPresentInResponsesForTheUser($userId);
         return self::addQuestionIdAndUserIdToQuestionsByDay($questionsByDay, $userId)->toArray();
     }
     private static function addQuestionIdAndUserIdToQuestionsByDay(Collection $questionsByDay, int $userId): Collection
@@ -85,6 +89,19 @@ class DailyResponse extends Page implements HasForms, HasActions
             ->get()
             ;
     }
+    private static function getQuestionsNotPresentInResponsesForTheUser($userId): Collection
+    {
+        return Question::query()
+            ->with('answers')
+            ->whereNotIn('id', function ($query) use ($userId) {
+                $query->select('question_id')
+                    ->from('responses')
+                    ->where('user_id', $userId);
+            })
+            ->select(['id', 'question', 'day_id'])
+            ->get()
+            ;
+    }
 
     public function form(Form $form): Form
     {
@@ -95,7 +112,6 @@ class DailyResponse extends Page implements HasForms, HasActions
                     return $this->data['daysAsIdAndMonth']->toArray();
                 })
                 ->searchable()
-                ->required()
                 ->live()
                 ->afterStateUpdated(function ($state, Set $set) {
                     $questionsByDay = self::getQuestionsByDayNotPresentInResponsesForTheUser($state, $this->data['user_id']);
@@ -104,7 +120,7 @@ class DailyResponse extends Page implements HasForms, HasActions
                 }),
             Placeholder::make('no_questions')
                 ->label('')
-                ->content('No hay preguntas disponibles para este día.')
+                ->content('No hay preguntas disponibles.')
                 ->visible(fn (Get $get): bool => empty($get('questions'))),
             Repeater::make('questions')
                 ->label('Preguntas')
@@ -148,8 +164,8 @@ class DailyResponse extends Page implements HasForms, HasActions
             ->success()
             ->body('Respuestas enviadas')
             ->actions([
-                Action::make('Ver resultados')
-                    ->button(),
+                //Action::make('Ver resultados')
+                    //->button(),
             ])
             ->send();
     }
@@ -158,7 +174,7 @@ class DailyResponse extends Page implements HasForms, HasActions
         Response::insert(self::removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($this->form->getState()['questions']));
         $this->form->fill([
             'day_id' => $this->form->getState()['day_id'],
-            'questions' => $this->getQuestionsForDayAndUser($this->form->getState()['day_id'], $this->data['user_id']),
+            'questions' => is_null($this->form->getState()['day_id']) ? $this->getQuestionsForUser($this->data['user_id']) : $this->getQuestionsForDayAndUser($this->form->getState()['day_id'], $this->data['user_id']),
             'daysAsIdAndMonth' => self::getDaysAsIdAndDayMonth(),
             'user_id' => $this->data['user_id'],
         ]);

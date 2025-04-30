@@ -7,7 +7,6 @@ use App\Models\Question;
 use App\Models\Response;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
-use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Radio;
@@ -26,17 +25,17 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 
+
 class DailyResponse extends Page implements HasForms, HasActions
 {
     use HasPageShield;
     use InteractsWithForms;
-    use InteractsWithActions;
     public ?array $data = [];
     public Response $response;
-
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static string $view = 'filament.pages.daily-response';
+    protected static ?string $title = 'Responder';
 
     public function mount(): void
     {

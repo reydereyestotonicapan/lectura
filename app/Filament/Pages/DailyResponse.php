@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Constants\StatusResponse;
+use App\Models\Answer;
 use App\Models\Day;
 use App\Models\Question;
 use App\Models\Response;
@@ -147,6 +149,11 @@ class DailyResponse extends Page implements HasForms, HasActions
                 ->visible(fn (Get $get): bool => !empty($get('questions')))
         ])->statePath('data');
     }
+    public static function getResultAnswerByQuestionId(int $questionId, int $answerIdSelected): string
+    {
+        $isCorrect = Answer::isCorrect($questionId, $answerIdSelected);
+        return $isCorrect ? StatusResponse::EXPECTED->getLabel() : StatusResponse::WRONG->getLabel();
+    }
     private static function removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($responsesToInsert): array
     {
         $now = Carbon::now();
@@ -154,30 +161,56 @@ class DailyResponse extends Page implements HasForms, HasActions
             unset($responseToInsert['id'], $responseToInsert['answers']);
             $responseToInsert['created_at'] = $now;
             $responseToInsert['updated_at'] = $now;
+            $responseToInsert['status'] = is_null($responseToInsert['answer_id']) ? StatusResponse::PENDING->getLabel() : self::getResultAnswerByQuestionId($responseToInsert['question_id'], $responseToInsert['answer_id']);
             return $responseToInsert;
         });
     }
-    private static function responsesSaved(): void
+    private static function responsesSaved($bodyMessage): void
     {
         Notification::make()
-            ->title('¡Excelente!')
+            ->title('¡Respuestas enviadas!')
             ->success()
-            ->body('Respuestas enviadas')
-            ->actions([
-                //Action::make('Ver resultados')
-                    //->button(),
-            ])
+            ->body($bodyMessage)
+            ->color('success')
+            ->duration(5000)
             ->send();
+    }
+    static function getCountResult($responsesToInsert)
+    {
+        $countResult = [
+            'expected' => 0,
+            'wrong' => 0,
+            'pending' => 0,
+        ];
+        Arr::map($responsesToInsert, function ($responseToInsert) use (&$countResult) {
+            switch ($responseToInsert['status']) {
+                case StatusResponse::EXPECTED->getLabel():
+                    $countResult['expected']++;
+                    break;
+                case StatusResponse::WRONG->getLabel():
+                    $countResult['wrong']++;
+                    break;
+                default:
+                    $countResult['pending']++;
+            }
+        });
+        return $countResult;
     }
     public function create(): void
     {
-        Response::insert(self::removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($this->form->getState()['questions']));
+        $responseToInsert = self::removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($this->form->getState()['questions']);
+        Response::insert($responseToInsert);
+        $bodyMessage = '';
+        $countResult = self::getCountResult($responseToInsert);
+        $bodyMessage .= $countResult['expected'] . ' Correctas ';
+        $bodyMessage .= $countResult['wrong'] . ' Inorrectas ';
+        $bodyMessage .= $countResult['pending'] . ' Pendientes ';
+        self::responsesSaved($bodyMessage);
         $this->form->fill([
             'day_id' => $this->form->getState()['day_id'],
             'questions' => is_null($this->form->getState()['day_id']) ? $this->getQuestionsForUser($this->data['user_id']) : $this->getQuestionsForDayAndUser($this->form->getState()['day_id'], $this->data['user_id']),
             'daysAsIdAndMonth' => self::getDaysAsIdAndDayMonth(),
             'user_id' => $this->data['user_id'],
         ]);
-        self::responsesSaved();
     }
 }

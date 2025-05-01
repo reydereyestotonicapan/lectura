@@ -18,4 +18,12 @@ class Answer extends Model
     {
         return $this->belongsTo(Question::class);
     }
+    public static function isCorrect(int $questionId, int $answerId): bool
+    {
+        return self::query()
+            ->where('question_id', $questionId)
+            ->where('id', $answerId)
+            ->where('is_correct', true)
+            ->exists();
+    }
 }

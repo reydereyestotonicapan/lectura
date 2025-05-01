@@ -21,8 +21,9 @@ return new class extends Migration
             $table->foreignIdFor(Day::class);
             $table->foreignIdFor(Question::class);
             $table->foreignIdFor(Answer::class)->nullable();
+            $table->enum('status', ['Correcta', 'Incorrecta ', 'Pendiente'])->default('Pendiente');
             $table->text('comment_user')->nullable();
-            //TODO add anothers columns like status, etc
+            $table->text('comment_team')->nullable();
             $table->timestamps();
         });
     }

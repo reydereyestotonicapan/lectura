@@ -8,8 +8,7 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 
 class QuestionsRelationManager extends RelationManager
 {
@@ -35,7 +34,7 @@ class QuestionsRelationManager extends RelationManager
                         Forms\Components\Toggle::make('is_correct')
                         ->label('Es correcta'),
                     ]),
-            ]);
+            ])->columns(1);
     }
 
     public function table(Table $table): Table

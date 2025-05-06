@@ -20,10 +20,11 @@ class Answer extends Model
     }
     public static function isCorrect(int $questionId, int $answerId): bool
     {
-        return self::query()
+        $exists = self::query()
             ->where('question_id', $questionId)
             ->where('id', $answerId)
             ->where('is_correct', true)
             ->exists();
+        return $exists === true;
     }
 }

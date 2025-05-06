@@ -20,7 +20,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Arr;
@@ -145,13 +144,15 @@ class DailyResponse extends Page implements HasForms, HasActions
                 ->addable(false)
                 ->deletable(false)
                 ->reorderable(false)
-                ->columns(2)
-                ->visible(fn (Get $get): bool => !empty($get('questions')))
+                ->columns(1)
+                ->visible(fn (Get $get): bool => !empty($get('questions'))),
         ])->statePath('data');
     }
     public static function getResultAnswerByQuestionId(int $questionId, int $answerIdSelected): string
     {
         $isCorrect = Answer::isCorrect($questionId, $answerIdSelected);
+        debug("Question ID: $questionId, Answer ID: $answerIdSelected :");
+        debug($isCorrect);
         return $isCorrect ? StatusResponse::EXPECTED->getLabel() : StatusResponse::WRONG->getLabel();
     }
     private static function removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($responsesToInsert): array
@@ -172,7 +173,7 @@ class DailyResponse extends Page implements HasForms, HasActions
             ->success()
             ->body($bodyMessage)
             ->color('success')
-            ->duration(5000)
+            ->duration(8000)
             ->send();
     }
     static function getCountResult($responsesToInsert)

@@ -91,6 +91,13 @@ class ResponseResource extends Resource
                     ->default(StatusResponse::PENDING->value)
                     ->label('Resultado')
                     ->visible(fn() => static::canViewColumnByAdminRole()),
+                SelectFilter::make('day_id')
+                    ->label('Día')
+                    ->relationship('day', 'day_month', fn($query) => $query->orderBy('day_month', 'desc'))
+                    ->searchable()
+                    ->preload()
+                    ->multiple()
+                    ->visible(fn() => static::canViewColumnByAdminRole()),
             ]);
     }
 

@@ -4,7 +4,7 @@
 
         @if (isset($data['questions']) && ! empty($data['questions']))
         <x-filament::button type="submit" class="w-full md:w-auto">
-            Guardar Respuestas
+            Enviar Respuestas
         </x-filament::button>
         @endif
     </form>

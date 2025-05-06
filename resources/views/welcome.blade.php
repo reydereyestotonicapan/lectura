@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Lectura</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -20,7 +20,7 @@
         @endif
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-        <img src="https://reydereyesphotobucket.s3.us-east-2.amazonaws.com/home.jpeg" alt="Descripción de la imagen">
+        <img src="https://reydereyesphotobucket.s3.us-east-2.amazonaws.com/mayo-2025.jpeg" alt="Lectura">
         <br>
         <button onclick="window.location.href='https://lectura.reydereyestotonicapan.org/admin'" style="background-color: rgb(152, 101, 53);
   border: none;

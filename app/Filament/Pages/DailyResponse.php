@@ -151,8 +151,8 @@ class DailyResponse extends Page implements HasForms, HasActions
     public static function getResultAnswerByQuestionId(int $questionId, int $answerIdSelected): string
     {
         $isCorrect = Answer::isCorrect($questionId, $answerIdSelected);
-        debug("Question ID: $questionId, Answer ID: $answerIdSelected :");
-        debug($isCorrect);
+        //debug("Question ID: $questionId, Answer ID: $answerIdSelected :");
+        //debug($isCorrect);
         return $isCorrect ? StatusResponse::EXPECTED->getLabel() : StatusResponse::WRONG->getLabel();
     }
     private static function removeIdAndAnswersAndAddCreateUpdateAtFromResponsesToInsert($responsesToInsert): array

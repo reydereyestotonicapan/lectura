@@ -115,8 +115,14 @@ class DailyResponse extends Page implements HasForms, HasActions
                 ->searchable()
                 ->live()
                 ->afterStateUpdated(function ($state, Set $set) {
-                    $questionsByDay = self::getQuestionsByDayNotPresentInResponsesForTheUser($state, $this->data['user_id']);
-                    $set('questions', self::addQuestionIdAndUserIdToQuestionsByDay($questionsByDay, $this->data['user_id'])->toArray());
+                    if (is_null($state)) {
+                        $this->mount();
+                        return;
+                    }
+                    $userId = $this->data['user_id'];
+                    $questionsByDay = self::getQuestionsByDayNotPresentInResponsesForTheUser($state, $userId);
+                    $questions = self::addQuestionIdAndUserIdToQuestionsByDay($questionsByDay, $userId)->toArray();
+                    $set('questions', $questions);
                     $set('day_id', $state);
                 }),
             Placeholder::make('no_questions')

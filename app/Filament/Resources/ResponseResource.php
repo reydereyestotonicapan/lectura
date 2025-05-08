@@ -62,13 +62,12 @@ class ResponseResource extends Resource
                     ->wrap(),
                 Tables\Columns\TextColumn::make('answer.description')
                     ->label('Respuesta recibida')
-                    ->getStateUsing(fn ($record) => $record->question->answers->count() > 0 ? $record->question->correctAnswer->description : $record->comment_user)
+                    ->getStateUsing(fn ($record) => $record->question->answers->count() > 0 ? $record->answer->description : $record->comment_user)
                     ->wrap(),
                 Tables\Columns\TextColumn::make('question.correctAnswer.description')
                     ->label('Respuesta correcta')
                     ->placeholder('Pregunta abierta')
-                    ->wrap()
-                    ->visible(fn() => !static::canViewColumnByAdminRole()),
+                    ->wrap(),
                 Tables\Columns\TextInputColumn::make('comment_team')
                     ->label('Comentario equipo')
                     ->visible(fn() => static::canViewColumnByAdminRole()),
@@ -80,6 +79,7 @@ class ResponseResource extends Resource
                 Tables\Columns\TextColumn::make('day.day_month')
                     ->label('Día'),
                 Tables\Columns\TextColumn::make('user.name')
+                    ->label('Lector')
                     ->numeric()
                     ->sortable()
                     ->visible(fn() => static::canViewColumnByAdminRole()),

@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             ]);
 
         // Create a super admin user
-        $user = User::factory()->create([
+        $user = User::where('email', 'mmenchu@reydereyestotonicapan.org')->first()
+            ?? User::factory()->create([
             'name' => 'Miguel',
             'email' => 'mmenchu@reydereyestotonicapan.org',
         ]);

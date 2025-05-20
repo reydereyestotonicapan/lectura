@@ -42,11 +42,20 @@ class DailyResponse extends Page implements HasForms, HasActions
 
     public function mount(): void
     {
+        $day_id = request()->query('day_id');
         $userId = auth()->user()->id;
         $daysAsIdAndMonth = self::getDaysAsIdAndDayMonth();
+
+        $questions = $day_id
+            ? self::addQuestionIdAndUserIdToQuestionsByDay(
+                self::getQuestionsByDayNotPresentInResponsesForTheUser((int)$day_id, $userId),
+                $userId
+            )->toArray()
+            : self::getQuestionsForUser($userId);
+
         $this->form->fill([
-            'day_id' => null,
-            'questions' => self::getQuestionsForUser($userId),
+            'day_id' => $day_id,
+            'questions' => $questions,
             'daysAsIdAndMonth' => $daysAsIdAndMonth,
             'user_id' => $userId,
         ]);

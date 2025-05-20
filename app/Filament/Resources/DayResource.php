@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\DayResource\Pages;
+use App\Filament\Resources\DayResource\Pages\CreateDay;
+use App\Filament\Resources\DayResource\Pages\EditDay;
+use App\Filament\Resources\DayResource\Pages\ListDays;
 use App\Filament\Resources\DayResource\RelationManagers\QuestionsRelationManager;
 use App\Models\Day;
 use Filament\Forms;
@@ -83,9 +85,9 @@ class DayResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDays::route('/'),
-            'create' => Pages\CreateDay::route('/create'),
-            'edit' => Pages\EditDay::route('/{record}/edit'),
+            'index' => ListDays::route('/'),
+            'create' => CreateDay::route('/create'),
+            'edit' => EditDay::route('/{record}/edit'),
         ];
     }
 }

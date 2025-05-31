@@ -20,17 +20,20 @@ class ResponseUsers extends BaseWidget
     protected int | string | array $columnSpan = 'full';
     public function table(Table $table): Table
     {
+        $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
+            ? "TO_CHAR(awards.month_date, 'YYYY-MM')"
+            : "DATE_FORMAT(awards.month_date, '%Y-%m')";
         return $table
             ->query(
                 User::query()
                     ->withCount(['responses as days_count' => function (Builder $query) {
                         $query->select(DB::raw('COUNT(DISTINCT day_id)'));
                     }])
-                    ->whereNotExists(function ($query) {
+                    ->whereNotExists(function ($query) use ($dateFormatSql) {
                         $query->select(DB::raw(1))
                             ->from('awards')
                             ->whereColumn('awards.user_id', 'users.id')
-                            ->whereRaw('DATE_FORMAT(awards.month_date, "%Y-%m") = ?', [now()->format('Y-m')]);
+                            ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
                     })
                     ->orderByDesc('days_count')
             )

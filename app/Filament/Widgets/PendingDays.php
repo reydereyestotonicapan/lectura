@@ -31,6 +31,9 @@ class PendingDays extends BaseWidget
                 Tables\Columns\TextColumn::make('chapters')
                 ->label('Lectura del día'),
             ])
+            ->recordUrl(
+                fn (Day $day): string => DailyResponse::getUrl(['day_id' => $day->id]),
+            )
             ->actions([
                 Tables\Actions\Action::make('respond')
                 ->label('Responder')
@@ -39,6 +42,6 @@ class PendingDays extends BaseWidget
     }
     public static function canView(): bool
     {
-        return true;
+        return auth()->user()->can('widget_PendingDays');
     }
 }

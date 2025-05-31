@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 use App\Filament\Widgets\PendingDays;
+use App\Filament\Widgets\ResponseUsers;
 use \Filament\Pages\Dashboard as FilamentDashboard;
 
 class Dashboard extends FilamentDashboard
@@ -15,6 +16,7 @@ class Dashboard extends FilamentDashboard
     {
         return [
             PendingDays::class,
+            ResponseUsers::class,
         ];
     }
 }

@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
             ?? Role::factory()->create([
                 'name' => 'default_user',
             ]);
-
         // Create a super admin user
         $user = User::where('email', 'mmenchu@reydereyestotonicapan.org')->first()
             ?? User::factory()->create([
@@ -55,7 +54,7 @@ class DatabaseSeeder extends Seeder
         $role->givePermissionTo($permissionModels);
 
         // Create first question with its answers
-        $day = Day::factory()->create();
+        /*$day = Day::factory()->create();
 
         $question1 = Question::factory()
             ->for($day)
@@ -78,7 +77,7 @@ class DatabaseSeeder extends Seeder
             ->state([
                 "question" => "¿Qué le pareció la lectura del día de hoy?"
             ])
-            ->create();
+            ->create();*/
 
         //call to Admin seeder
         $this->call([

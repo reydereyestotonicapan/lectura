@@ -15,12 +15,18 @@ class DefaultUserSeeder extends Seeder
     {
         $defaultUserPermissions = [
             'page_DailyResponse',
+            'widget_PendingDays',
         ];
         foreach ($defaultUserPermissions as $permission) {
             Permission::findOrCreate($permission);
         }
         $permissionModels = Permission::whereIn('name', $defaultUserPermissions)->get();
         $defaultUserRole = Role::where('name', 'default_user')->first();
-        $defaultUserRole->givePermissionTo($permissionModels);
+
+        foreach ($permissionModels as $permission) {
+            if (!$defaultUserRole->hasPermissionTo($permission)) {
+                $defaultUserRole->givePermissionTo($permission);
+            }
+        }
     }
 }

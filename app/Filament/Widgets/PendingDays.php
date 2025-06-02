@@ -24,6 +24,8 @@ class PendingDays extends BaseWidget
                             ->where('user_id', $userId)
                             ->distinct();
                     })
+                    ->whereMonth('date_assigned', now()->month)
+                    ->whereYear('date_assigned', now()->year)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('day_month')

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class ResponseUsers extends BaseWidget
 {
-    protected static ?string $heading = 'Dias contestados por usuario';
+    protected static ?string $heading = 'Dias contestados por usuario en el presente mes';
     private const int MIN_SILVER_CATEGORY = 10;
     private const int MIN_GOLD_CATEGORY = 20;
 
@@ -26,32 +26,20 @@ class ResponseUsers extends BaseWidget
         return $table
             ->query(
                 User::query()
-                    ->withCount(['responses as days_count' => function (Builder $query) {
-                        $query->select(DB::raw('COUNT(DISTINCT day_id)'));
+                    ->withCount(['responses as days_count' => function ($query) {
+                        $query->select(DB::raw('COUNT(DISTINCT day_id)'))
+                            ->whereHas('day', function ($dayQuery) {
+                                $dayQuery->whereMonth('date_assigned', now()->month)
+                                    ->whereYear('date_assigned', now()->year);
+                            });;
                     }])
-                    ->whereNotExists(function ($query) use ($dateFormatSql) {
-                        $query->select(DB::raw(1))
-                            ->from('awards')
-                            ->whereColumn('awards.user_id', 'users.id')
-                            ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
-                    })
                     ->orderByDesc('days_count')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('days_count')
                     ->label('Días respondidos')
-                    ->sortable(),
-            ])
-            ->actions([
-                Tables\Actions\Action::make('notification')
-                    ->label('Generar reconocimiento')
-                    ->action(function (User $user) {
-                        $award = self::generateAwardForUser($user);
-                        $award ? self::successNotification('Reconocmiento generado', 'El reconocimiento ha sido generado y enviado correctamente.') : self::errorNotification('Problemas al generar reconocimiento','Ocurrio un problema al generar el reconocimiento');
-                    }),
             ])
             //TODO check how I can show pagination links
             ;

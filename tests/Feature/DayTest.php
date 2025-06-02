@@ -8,25 +8,38 @@ use Spatie\Permission\Models\Permission;
 uses(RefreshDatabase::class);
 
 it('has admin role', function () {
+
+    $user = User::factory()->create([
+        'name' => 'Miguel',
+        'email' => 'mmenchu@reydereyestotonicapan.org',
+    ]);
+    $role = Role::where('name', 'super_admin')->first()
+        ?? Role::factory()->create();
+    $user->assignRole($role);
+
     //Arrange
-    $role = Role::where('name', 'admin')->first()
-        ?? Role::create(['name' => 'admin', 'guard_name' => 'web']);
+    // Give admin all permissions
     $permissions = [
         'view_any_day',
+        'day_view_any',  // Alternative format Shield might use
+        'access_admin_panel', // Often required for any admin panel access
+        'view_admin_panel'    // Another common requirement
     ];
-    foreach ($permissions as $permission) {
-        Permission::create(['name' => $permission, 'guard_name' => 'web']);
+
+    foreach ($permissions as $perm) {
+        $permission = Permission::firstOrCreate(['name' => $perm], ['guard_name' => 'web']);
+        $role->givePermissionTo($permission);
     }
-    $role->syncPermissions(Permission::all());
-    $user = User::factory()->create();
-    $user->assignRole($role);
+
+
+    dump("User has role: " . $user->hasRole('super_admin'));
+    dump("User can view_any_day: " . $user->can('view_any_day'));
 
     //Act
     $response = $this->actingAs($user)
         ->get('/admin/days');
 
-
     //Assert
     $response->assertStatus(200);
-
+    // TODO create your firs test to start TDD
 });

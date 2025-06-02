@@ -110,6 +110,10 @@ class DailyResponse extends Page implements HasForms, HasActions
                     ->from('responses')
                     ->where('user_id', $userId);
             })
+            ->whereHas('day', function ($query) {
+                $query->whereMonth('date_assigned', now()->month)
+                    ->whereYear('date_assigned', now()->year);
+            })
             ->select(['id', 'question', 'day_id'])
             ->get()
             ;

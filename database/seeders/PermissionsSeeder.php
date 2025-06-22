@@ -22,6 +22,14 @@ class PermissionsSeeder extends Seeder
             'update_user',
             'widget_PendingDays',
             'widget_ResponseUsers',
+            'view_any_category',
+            'view_any_ministry',
+            'view_any_asset',
+        ];
+        $InventoryManagerPermissions = [
+            'view_any_category',
+            'view_any_ministry',
+            'view_any_asset',
         ];
 
         foreach ($relationManagerPermissions as $permission) {
@@ -31,6 +39,7 @@ class PermissionsSeeder extends Seeder
         // Get the roles
         $superAdminRole = Role::where('name', 'super_admin')->first();
         $adminRole = Role::where('name', 'admin')->first();
+        $InventoryAdminRole = Role::where('name', 'inventory_admin')->first();
 
         // If roles don't exist yet, create them
         if (!$superAdminRole) {
@@ -38,6 +47,9 @@ class PermissionsSeeder extends Seeder
         }
         if (!$adminRole) {
             $adminRole = Role::create(['name' => 'admin']);
+        }
+        if(!$InventoryAdminRole){
+            $InventoryAdminRole = Role::create(['name' => 'inventory_admin']);
         }
 
         // Assign permissions to roles
@@ -49,6 +61,12 @@ class PermissionsSeeder extends Seeder
                 $adminRole->givePermissionTo($permName);
             }
         }
+        foreach ($InventoryManagerPermissions as $permName) {
+            if (!$InventoryAdminRole->hasPermissionTo($permName)) {
+                $InventoryAdminRole->givePermissionTo($permName);
+            }
+        }
+
         $this->call([
             DefaultUserSeeder::class
         ]);

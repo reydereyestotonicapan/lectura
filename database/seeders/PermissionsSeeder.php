@@ -10,7 +10,7 @@ class PermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        $relationManagerPermissions = [
+        $superAdminPermissions = [
             'view_any_day',
             'create_day',
             'update_day',
@@ -26,15 +26,24 @@ class PermissionsSeeder extends Seeder
             'view_any_ministry',
             'view_any_asset',
         ];
+        $adminPermissions = [
+            'view_any_day',
+            'create_day',
+            'update_day',
+            'view_any_question',
+            'create_question',
+            'update_question',
+            'page_DailyResponse',
+            'view_any_user',
+            'update_user',
+            'widget_PendingDays',
+            'widget_ResponseUsers',
+        ];
         $InventoryManagerPermissions = [
             'view_any_category',
             'view_any_ministry',
             'view_any_asset',
         ];
-
-        foreach ($relationManagerPermissions as $permission) {
-            Permission::findOrCreate($permission);
-        }
 
         // Get the roles
         $superAdminRole = Role::where('name', 'super_admin')->first();
@@ -53,10 +62,12 @@ class PermissionsSeeder extends Seeder
         }
 
         // Assign permissions to roles
-        foreach ($relationManagerPermissions as $permName) {
+        foreach ($superAdminPermissions as $permName) {
             if (!$superAdminRole->hasPermissionTo($permName)) {
                 $superAdminRole->givePermissionTo($permName);
             }
+        }
+        foreach ($adminPermissions as $permName) {
             if (!$adminRole->hasPermissionTo($permName)) {
                 $adminRole->givePermissionTo($permName);
             }

@@ -14,6 +14,9 @@ class Day extends Model
         'chapters',
         'day_month'
     ];
+    protected $casts = [
+        'date_assigned' => 'date',
+    ];
 
     public function questions(): HasMany
     {

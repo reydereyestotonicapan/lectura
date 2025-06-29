@@ -39,6 +39,22 @@
             @else
                 <div class="text-center">
                     <p class="text-gray-400 text-lg">Lectura del día pendiente de asignar</p>
+                    <br>
+                    <button onclick="window.location.href='{{ env('APP_URL') }}/admin'" style="background-color: rgb(152, 101, 53);
+                      border: none;
+                      color: white;
+                      padding: 15px 32px;
+                      text-align: center;
+                      text-decoration: none;
+                      display: inline-block;
+                      font-size: 16px;
+                      margin: 4px 2px;
+                      cursor: pointer;
+                      border-radius: 10px;
+                      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
+                                            Ingresar a la plataforma
+                    </button>
+
                 </div>
             @endif
             <div class="mt-8 pt-6 border-t border-gray-200">

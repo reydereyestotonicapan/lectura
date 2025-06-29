@@ -13,6 +13,10 @@ use Filament\Pages\Auth\PasswordReset\RequestPasswordReset as BaseRequestPasswor
 
 class RequestPasswordReset extends BaseRequestPasswordReset
 {
+    public function getHeading(): string
+    {
+        return '¿Olvidó su contraseña?';
+    }
     public function request(): void
     {
         try {

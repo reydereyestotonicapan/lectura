@@ -37,13 +37,14 @@ class ResetPasswordNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject(Lang::get('Notificación de restablecimiento de contraseña'))
+            ->subject(Lang::get('Cambio de contraseña'))
             ->greeting(Lang::get('Hola') . " {$notifiable->name},")
             ->line(Lang::get('Está recibiendo este correo electrónico porque hemos recibido una solicitud de restablecimiento de contraseña para su cuenta.'))
             ->action(Lang::get('Restablecer contraseña'), $this->resetUrl($notifiable))
             ->line(Lang::get('Este enlace de restablecimiento de contraseña caducará en :count minutos.', ['count' => config('auth.passwords.'.config('auth.defaults.passwords').'.expire')]))
-            ->line(Lang::get('Si tu no solicitaste cambio de contraseña, no necesitas hacer nada con este correo.'));
-
+            ->line(Lang::get('Si no solicitó un restablecimiento de contraseña, no se requiere ninguna acción adicional.'))
+            ->line('**Ministerio de Lectura**')
+            ->salutation('Bendiciones,');
     }
 
     /**

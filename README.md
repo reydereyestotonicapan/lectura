@@ -39,21 +39,17 @@ Helps users track and respond to daily readings from a yearly Bible plan.
     ```bash
    php artisan migrate:fresh --seed
    
-6. Generate for all entities (Dar todos los permisos para super_admin role hasta hoy 15/04/25)
+6. If you want to update current roles or permissions
    ```bash
-   php artisan shield:generate --all
+   php artisan db:seed --class=PermissionSeeder
    
-7. Generate custom permissions
-   ```bash
-   php artisan db:seed --class=ShieldSeeder
-  
 7. Run the app in local
-    ```bash
+   ```bash
    php artisan serve
-   
-5. Open your on http://localhost:8000/admin 
+  
+8. Open your on http://localhost:8000
 
-7. For test purpose, You can use the 'mmenchu@reydereyestotonicapan.org' user and 'password' as the password.
+9. For test purpose, You can use the 'mmenchu@reydereyestotonicapan.org' user and 'password' as the password.
 
 
 ## Features

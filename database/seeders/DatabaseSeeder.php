@@ -31,7 +31,6 @@ class DatabaseSeeder extends Seeder
         $role = Role::where('name', 'super_admin')->first()
             ?? Role::factory()->create();
         $user->assignRole($role);
-        //TODO create permissions and call to permission seeder
         $superAdminPermissions = [
             'view_any_day',
             'create_day',

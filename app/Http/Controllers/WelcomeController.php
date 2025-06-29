@@ -11,8 +11,8 @@ class WelcomeController extends Controller
         $today = now();
         $dates = [
             $today->format('Y-m-d'),
-            $today->subDay()->format('Y-m-d'),
-            $today->subDays(2)->format('Y-m-d')
+            $today->copy()->subDay()->format('Y-m-d'),
+            $today->copy()->subDays(2)->format('Y-m-d')
         ];
 
         $days = Day::with('questions')
@@ -20,9 +20,13 @@ class WelcomeController extends Controller
             ->get()
             ->keyBy(fn($day) => $day->date_assigned->format('Y-m-d'));
 
-        $currentDay = $days[now()->format('Y-m-d')] ?? null;
-        $yesterday = $days[now()->subDay()->format('Y-m-d')] ?? null;
-        $dayBeforeYesterday = $days[now()->subDays(2)->format('Y-m-d')] ?? null;
+        $todayStr = $today->format('Y-m-d');
+        $yesterdayStr = $today->copy()->subDay()->format('Y-m-d');
+        $dayBeforeStr = $today->copy()->subDays(2)->format('Y-m-d');
+
+        $currentDay = $days[$todayStr] ?? null;
+        $yesterday = $days[$yesterdayStr] ?? null;
+        $dayBeforeYesterday = $days[$dayBeforeStr] ?? null;
 
         $data = [
             'readingChapters' => $currentDay?->chapters,

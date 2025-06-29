@@ -16,7 +16,6 @@ return new class extends Migration
             $table->id();
             $table->string('question');
             $table->foreignIdFor(Day::class);
-            //TODO check delete on cascade for day
             $table->timestamps();
         });
     }

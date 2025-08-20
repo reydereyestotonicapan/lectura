@@ -22,7 +22,6 @@ return new class extends Migration
             $table->foreignIdFor(Question::class);
             $table->foreignIdFor(Answer::class)->nullable();
             $table->text('comment_user')->nullable();
-            $table->text('comment_team')->nullable();
             $table->timestamps();
         });
     }

@@ -24,6 +24,13 @@ class MailAward extends Mailable
     {
         $this->award = $awardParam;
     }
+    private static function formattedCategory(Award $award) : string {
+        return strtolower(match ($award->category) {
+            'gold' => 'ORO',
+            'silver' => 'PLATA',
+            'bronze' => 'BRONCE'
+        });
+    }
 
     /**
      * Get the message envelope.
@@ -31,7 +38,7 @@ class MailAward extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reconocimiento '.Carbon::now()->locale('es')->monthName.' '.Carbon::now()->year,
+            subject: 'Lector de '. self::formattedCategory($this->award) . ' ' .Carbon::now()->locale('es')->monthName.' '.Carbon::now()->year,
         );
     }
 
@@ -56,8 +63,8 @@ class MailAward extends Mailable
     public function attachments(): array
     {
         return [
-            Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/' . $this->award->file_name)
-            ->withMime(GenerateAward::MIME_TYPE),
+            /*Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/' . $this->award->file_name)
+            ->withMime(GenerateAward::MIME_TYPE),*/
         ];
     }
 }

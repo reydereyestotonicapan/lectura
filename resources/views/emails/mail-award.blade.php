@@ -228,10 +228,9 @@
 <main class="container">
     <div class="certificate">
         <div class="text-center">
-            <h2>¡Felicitaciones {{$award->user->name}}!</h2>
-            <p class="subtitle">Por haber leido durante el mes de {{\Carbon\Carbon::now()->locale('es')->monthName}}</p>
-            <p>Sigue adelante durante el siguiente mes.</p>
-
+            <h2>¡Excelente, hermana <b>{{$award->user->name}}</b>!</h2>
+            <p class="subtitle">Por haber buscado al Señor a través de su Palabra durante el mes de la Biblia, leyendo y respondiendo a las preguntas de comprobación durante <b>{{$award->days_count}}</b> dias.</p>
+            <p>1 Pedro 2:2 Deseen con ansias la leche pura de la palabra, como niños recién nacidos. Así, por medio de ella, crecerán en su salvación.</p>
         </div>
     </div>
 </main>

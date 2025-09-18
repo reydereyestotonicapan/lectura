@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Jobs\GenerateAward;
+use App\Mail\MailAward;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Mail;
 
 class Award extends Model
 {
@@ -27,7 +29,8 @@ class Award extends Model
         });
 
         static::created(function (Award $award) {
-            GenerateAward::dispatch($award);
+            //GenerateAward::dispatch($award);
+            Mail::to($award->user->email)->queue(new MailAward($award));
         });
     }
     public function user(): BelongsTo

@@ -33,6 +33,12 @@ class ResponseUsers extends BaseWidget
                                     ->whereYear('date_assigned', now()->year);
                             });;
                     }])
+                    ->whereNotExists(function ($query) use ($dateFormatSql) {
+                        $query->select(DB::raw(1))
+                            ->from('awards')
+                            ->whereColumn('awards.user_id', 'users.id')
+                            ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
+                    })
                     ->orderByDesc('days_count')
             )
             ->columns([
@@ -40,6 +46,14 @@ class ResponseUsers extends BaseWidget
                     ->searchable(),
                 Tables\Columns\TextColumn::make('days_count')
                     ->label('Días respondidos')
+            ])
+            ->actions([
+                Tables\Actions\Action::make('notification')
+                    ->label('Generar reconocimiento')
+                    ->action(function (User $user) {
+                        $award = self::generateAwardForUser($user);
+                        $award ? self::successNotification('Reconocmiento generado', 'El reconocimiento ha sido generado y enviado correctamente.') : self::errorNotification('Problemas al generar reconocimiento','Ocurrio un problema al generar el reconocimiento');
+                    }),
             ])
             //TODO check how I can show pagination links
             ;

@@ -1,20 +1,35 @@
-# Bible plan
-A web application built with Laravel and Filamentphp.
+<div align="center">
+  <img src="public/images/CROW.svg" alt="CROW Logo" width="200">
+  <h1>Church CRM</h1>
+  <p><em>Built with Filament and MYSQL</em></p>
+</div>
 
-## About
-Helps users track and respond to daily readings from a yearly Bible plan.
+## ℹ️ About
+Church Customer Relationship Management with Filament and MYSQL helps church to manage and analyze interactions with current and potential members.
 
-## Requirements
+## 🌟 Features
+- User login and registration
+- Role-based access control
+- Inventory management for church resources
+- Admin dashboard for managing users and content
+- Daily Bible reading plans
+- Progress tracking and statistics
+- Responsive design for mobile and desktop
+- Email notifications for reminders and updates
+
+
+## 🔧 Tech requirements
 - PHP >= 8.1
-- Composer
-- Node.js & NPM
-- MySQL
+- Composer >= 2.6.5
+- Node.js >= 22.9.0 
+- NPM >= 10.8.3
+- MySQL >= 8.0
 
-## Installation
+## 📋 Installation steps
 1. Clone the repository
    ```bash
-   git clone https://github.com/MMenchuDev/bible-plan.git
-   cd bible-plan
+   git clone https://github.com/xoyon-dev/church-crm.git
+   cd church-crm
 
 2. Install dependencies 
    ```bash
@@ -31,7 +46,7 @@ Helps users track and respond to daily readings from a yearly Bible plan.
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_DATABASE=bible_plan
+   DB_DATABASE=church_crm
    DB_USERNAME=your_username
    DB_PASSWORD=your_password
    
@@ -52,12 +67,8 @@ Helps users track and respond to daily readings from a yearly Bible plan.
 9. For test purpose, You can use the 'mmenchu@reydereyestotonicapan.org' user and 'password' as the password.
 
 
-## Features
-- Roles and permissions
-- Reading plan customization
-- Daily reading tracker
-- Progress statistics
-
+## 💻 Tech Features
+- Filament Shield for Roles and permissions
 
 
 ## License

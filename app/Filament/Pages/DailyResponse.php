@@ -181,7 +181,11 @@ class DailyResponse extends Page implements HasForms, HasActions
             unset($responseToInsert['id'], $responseToInsert['answers'], $responseToInsert['day']);
             $responseToInsert['created_at'] = $now;
             $responseToInsert['updated_at'] = $now;
-            $responseToInsert['status'] = is_null($responseToInsert['answer_id']) ? StatusResponse::PENDING->getLabel() : self::getResultAnswerByQuestionId($responseToInsert['question_id'], $responseToInsert['answer_id']);
+            $responseToInsert['answer_id'] = $responseToInsert['answer_id'] ?? null;
+            $responseToInsert['comment_user'] = $responseToInsert['comment_user'] ?? null;
+            $responseToInsert['status'] = $responseToInsert['answer_id']
+                ? self::getResultAnswerByQuestionId($responseToInsert['question_id'], $responseToInsert['answer_id'])
+                : StatusResponse::PENDING->getLabel();
             return $responseToInsert;
         });
     }

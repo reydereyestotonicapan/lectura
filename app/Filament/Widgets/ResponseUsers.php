@@ -18,6 +18,7 @@ class ResponseUsers extends BaseWidget
     private const int MIN_GOLD_CATEGORY = 20;
 
     protected int | string | array $columnSpan = 'full';
+
     public function table(Table $table): Table
     {
         $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
@@ -39,6 +40,7 @@ class ResponseUsers extends BaseWidget
                             ->whereColumn('awards.user_id', 'users.id')
                             ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
                     })
+                    ->having('days_count', '>=', 1)
                     ->orderByDesc('days_count')
             )
             ->columns([
@@ -46,6 +48,58 @@ class ResponseUsers extends BaseWidget
                     ->searchable(),
                 Tables\Columns\TextColumn::make('days_count')
                     ->label('Días respondidos')
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('sendAllAwards')
+                    ->label(fn () => self::hasPendingUsers()
+                        ? 'Enviar todos los reconocimientos'
+                        : 'Reconocimientos ya enviados')
+                    ->icon(fn () => self::hasPendingUsers()
+                        ? 'heroicon-o-paper-airplane'
+                        : 'heroicon-o-check-circle')
+                    ->color(fn () => self::hasPendingUsers() ? 'warning' : 'gray')
+                    ->tooltip(fn () => self::hasPendingUsers()
+                        ? null
+                        : 'Todos los reconocimientos del mes ya fueron enviados')
+                    ->requiresConfirmation(fn () => self::hasPendingUsers())
+                    ->modalHeading('Enviar reconocimientos a todos')
+                    ->modalDescription('Se generará y enviará un reconocimiento a cada usuario que aparece en esta tabla. ¿Deseas continuar?')
+                    ->modalSubmitActionLabel('Sí, enviar todos')
+                    ->action(function () {
+                        if (!self::hasPendingUsers()) {
+                            return;
+                        }
+                        $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
+                            ? "TO_CHAR(awards.month_date, 'YYYY-MM')"
+                            : "DATE_FORMAT(awards.month_date, '%Y-%m')";
+
+                        $users = User::query()
+                            ->withCount(['responses as days_count' => function ($query) {
+                                $query->select(DB::raw('COUNT(DISTINCT day_id)'))
+                                    ->whereHas('day', function ($dayQuery) {
+                                        $dayQuery->whereMonth('date_assigned', now()->month)
+                                            ->whereYear('date_assigned', now()->year);
+                                    });
+                            }])
+                            ->whereNotExists(function ($query) use ($dateFormatSql) {
+                                $query->select(DB::raw(1))
+                                    ->from('awards')
+                                    ->whereColumn('awards.user_id', 'users.id')
+                                    ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
+                            })
+                            ->having('days_count', '>=', 1)
+                            ->get();
+
+                        $success = 0;
+                        $failed = 0;
+                        foreach ($users as $user) {
+                            self::generateAwardForUser($user) ? $success++ : $failed++;
+                        }
+
+                        $failed > 0
+                            ? self::errorNotification('Reconocimientos enviados con errores', "{$success} enviados correctamente, {$failed} fallaron.")
+                            : self::successNotification('Reconocimientos enviados', "Se generaron y enviaron {$success} reconocimiento(s) correctamente.");
+                    }),
             ])
             ->actions([
                 Tables\Actions\Action::make('notification')
@@ -81,6 +135,30 @@ class ResponseUsers extends BaseWidget
             ->send();
 
     }
+    private static function hasPendingUsers(): bool
+    {
+        $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
+            ? "TO_CHAR(awards.month_date, 'YYYY-MM')"
+            : "DATE_FORMAT(awards.month_date, '%Y-%m')";
+
+        return User::query()
+            ->withCount(['responses as days_count' => function ($query) {
+                $query->select(DB::raw('COUNT(DISTINCT day_id)'))
+                    ->whereHas('day', function ($dayQuery) {
+                        $dayQuery->whereMonth('date_assigned', now()->month)
+                            ->whereYear('date_assigned', now()->year);
+                    });
+            }])
+            ->whereNotExists(function ($query) use ($dateFormatSql) {
+                $query->select(DB::raw(1))
+                    ->from('awards')
+                    ->whereColumn('awards.user_id', 'users.id')
+                    ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
+            })
+            ->having('days_count', '>=', 1)
+            ->exists();
+    }
+
     public static function generateAwardForUser(User $user): bool
     {
         try {

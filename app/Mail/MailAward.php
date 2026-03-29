@@ -63,8 +63,8 @@ class MailAward extends Mailable
     public function attachments(): array
     {
         return [
-            /*Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/' . $this->award->file_name)
-            ->withMime(GenerateAward::MIME_TYPE),*/
+            Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/' . $this->award->file_name)
+            ->withMime(GenerateAward::MIME_TYPE),
         ];
     }
 }

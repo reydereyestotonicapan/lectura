@@ -61,6 +61,12 @@ class PermissionsSeeder extends Seeder
             $InventoryAdminRole = Role::create(['name' => 'inventory_admin']);
         }
 
+        // Ensure all permissions exist before assigning
+        $allPermissions = array_unique(array_merge($superAdminPermissions, $adminPermissions, $InventoryManagerPermissions));
+        foreach ($allPermissions as $permName) {
+            Permission::findOrCreate($permName);
+        }
+
         // Assign permissions to roles
         foreach ($superAdminPermissions as $permName) {
             if (!$superAdminRole->hasPermissionTo($permName)) {

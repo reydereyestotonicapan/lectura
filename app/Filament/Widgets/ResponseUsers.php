@@ -8,7 +8,6 @@ use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ResponseUsers extends BaseWidget
@@ -32,15 +31,26 @@ class ResponseUsers extends BaseWidget
                             ->whereHas('day', function ($dayQuery) {
                                 $dayQuery->whereMonth('date_assigned', now()->month)
                                     ->whereYear('date_assigned', now()->year);
-                            });;
+                            });
                     }])
+                    ->whereExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('responses')
+                            ->whereColumn('responses.user_id', 'users.id')
+                            ->whereExists(function ($q) {
+                                $q->select(DB::raw(1))
+                                    ->from('days')
+                                    ->whereColumn('days.id', 'responses.day_id')
+                                    ->whereMonth('date_assigned', now()->month)
+                                    ->whereYear('date_assigned', now()->year);
+                            });
+                    })
                     ->whereNotExists(function ($query) use ($dateFormatSql) {
                         $query->select(DB::raw(1))
                             ->from('awards')
                             ->whereColumn('awards.user_id', 'users.id')
                             ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
                     })
-                    ->having('days_count', '>=', 1)
                     ->orderByDesc('days_count')
             )
             ->columns([
@@ -81,13 +91,24 @@ class ResponseUsers extends BaseWidget
                                             ->whereYear('date_assigned', now()->year);
                                     });
                             }])
+                            ->whereExists(function ($query) {
+                                $query->select(DB::raw(1))
+                                    ->from('responses')
+                                    ->whereColumn('responses.user_id', 'users.id')
+                                    ->whereExists(function ($q) {
+                                        $q->select(DB::raw(1))
+                                            ->from('days')
+                                            ->whereColumn('days.id', 'responses.day_id')
+                                            ->whereMonth('date_assigned', now()->month)
+                                            ->whereYear('date_assigned', now()->year);
+                                    });
+                            })
                             ->whereNotExists(function ($query) use ($dateFormatSql) {
                                 $query->select(DB::raw(1))
                                     ->from('awards')
                                     ->whereColumn('awards.user_id', 'users.id')
                                     ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
                             })
-                            ->having('days_count', '>=', 1)
                             ->get();
 
                         $success = 0;
@@ -142,20 +163,18 @@ class ResponseUsers extends BaseWidget
             : "DATE_FORMAT(awards.month_date, '%Y-%m')";
 
         return User::query()
-            ->withCount(['responses as days_count' => function ($query) {
-                $query->select(DB::raw('COUNT(DISTINCT day_id)'))
-                    ->whereHas('day', function ($dayQuery) {
-                        $dayQuery->whereMonth('date_assigned', now()->month)
-                            ->whereYear('date_assigned', now()->year);
-                    });
-            }])
+            ->whereHas('responses', function ($query) {
+                $query->whereHas('day', function ($dayQuery) {
+                    $dayQuery->whereMonth('date_assigned', now()->month)
+                        ->whereYear('date_assigned', now()->year);
+                });
+            })
             ->whereNotExists(function ($query) use ($dateFormatSql) {
                 $query->select(DB::raw(1))
                     ->from('awards')
                     ->whereColumn('awards.user_id', 'users.id')
                     ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
             })
-            ->having('days_count', '>=', 1)
             ->exists();
     }
 

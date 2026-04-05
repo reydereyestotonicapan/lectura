@@ -61,6 +61,7 @@ class ResponseUsers extends BaseWidget
             ])
             ->headerActions([
                 Tables\Actions\Action::make('sendAllAwards')
+                    ->visible(fn () => self::isAwardingOpen())
                     ->label(fn () => self::hasPendingUsers()
                         ? 'Enviar todos los reconocimientos'
                         : 'Reconocimientos ya enviados')
@@ -124,6 +125,7 @@ class ResponseUsers extends BaseWidget
             ])
             ->actions([
                 Tables\Actions\Action::make('notification')
+                    ->visible(fn () => self::isAwardingOpen())
                     ->label('Generar reconocimiento')
                     ->action(function (User $user) {
                         $award = self::generateAwardForUser($user);
@@ -191,6 +193,11 @@ class ResponseUsers extends BaseWidget
             return false;
         }
     }
+    private static function isAwardingOpen(): bool
+    {
+        return app()->isLocal() || now()->isLastOfMonth();
+    }
+
     public static function canView(): bool
     {
         return auth()->user()->can('widget_ResponseUsers');

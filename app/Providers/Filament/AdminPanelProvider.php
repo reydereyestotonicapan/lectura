@@ -57,7 +57,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->brandLogo(asset('images/CROW.svg'))
-            ->favicon(asset('images/CROW.svg'))
+            ->favicon(asset('images/favicon.svg'))
             ->registration()
             ->passwordReset(RequestPasswordReset::class)
             ;

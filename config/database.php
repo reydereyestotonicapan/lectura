@@ -97,6 +97,26 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'pgsql_prod' => [
+            'driver' => 'pgsql',
+            'url' => env('PROD_DB_URL'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
+        'pgsql_stage' => [
+            'driver' => 'pgsql',
+            'url' => env('STAGE_DB_URL'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

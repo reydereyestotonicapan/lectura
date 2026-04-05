@@ -67,6 +67,59 @@ Church Customer Relationship Management with Filament and MYSQL helps church to 
 9. For test purpose, You can use the 'mmenchu@reydereyestotonicapan.org' user and 'password' as the password.
 
 
+## 🐳 Local development with Docker
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+1. Build and start the containers
+   ```bash
+   docker compose up --build
+   ```
+
+2. Run migrations and seeders
+   ```bash
+   docker compose exec app php artisan migrate --seed
+   ```
+
+3. Open the app on http://localhost:8000
+
+**Other useful commands**
+
+```bash
+# Stop containers (keep data)
+docker compose stop
+
+# Stop and remove containers + volumes (wipe DB)
+docker compose down -v
+
+# Tail Laravel logs
+docker compose exec app tail -f storage/logs/laravel.log
+
+# Open a shell inside the app container
+docker compose exec app sh
+```
+
+The PostgreSQL database is also available on your host at `localhost:5432` (user: `lectura`, password: `secret`, db: `lectura`), so you can connect with any SQL client.
+
+### Syncing production data to stage
+
+To keep your stage environment up to date with production data, add the Railway public connection URLs to your `.env`:
+
+```env
+PROD_DB_URL=postgresql://postgres:<password>@your-db-prod-host:post/database
+STAGE_DB_URL=postgresql://postgres:<password>@your-db-stage-host:port/database
+```
+
+Then run:
+
+```bash
+php artisan db:sync-from-prod
+```
+
+This copies only new records from prod to stage — it never overwrites or deletes existing data.
+
+---
+
 ## 💻 Tech Features
 - Filament Shield for Roles and permissions
 

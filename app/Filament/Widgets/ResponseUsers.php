@@ -59,9 +59,8 @@ class ResponseUsers extends BaseWidget
                 Tables\Columns\TextColumn::make('days_count')
                     ->label('Días respondidos')
             ])
-            ->headerActions([
+            ->headerActions(self::isAwardingOpen() ? [
                 Tables\Actions\Action::make('sendAllAwards')
-                    ->visible(fn () => self::isAwardingOpen())
                     ->label(fn () => self::hasPendingUsers()
                         ? 'Enviar todos los reconocimientos'
                         : 'Reconocimientos ya enviados')
@@ -122,16 +121,15 @@ class ResponseUsers extends BaseWidget
                             ? self::errorNotification('Reconocimientos enviados con errores', "{$success} enviados correctamente, {$failed} fallaron.")
                             : self::successNotification('Reconocimientos enviados', "Se generaron y enviaron {$success} reconocimiento(s) correctamente.");
                     }),
-            ])
-            ->actions([
+            ] : [])
+            ->actions(self::isAwardingOpen() ? [
                 Tables\Actions\Action::make('notification')
-                    ->visible(fn () => self::isAwardingOpen())
                     ->label('Generar reconocimiento')
                     ->action(function (User $user) {
                         $award = self::generateAwardForUser($user);
                         $award ? self::successNotification('Reconocmiento generado', 'El reconocimiento ha sido generado y enviado correctamente.') : self::errorNotification('Problemas al generar reconocimiento','Ocurrio un problema al generar el reconocimiento');
                     }),
-            ])
+            ] : [])
             //TODO check how I can show pagination links
             ;
     }

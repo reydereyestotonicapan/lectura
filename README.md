@@ -126,3 +126,97 @@ This copies only new records from prod to stage — it never overwrites or delet
 
 ## License
 [MIT](LICENSE) `
+
+---
+
+## Firebase Setup (Mobile API)
+
+### 1. Download the service account JSON
+
+Go to **Firebase Console → Project Settings → Service accounts → Generate new private key** and download the JSON file.
+
+Place it at:
+
+```
+storage/app/firebase/service-account.json
+```
+
+### 2. Configure environment variables
+
+In your `.env` file:
+
+```env
+FIREBASE_CREDENTIALS=storage/app/firebase/service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project-id
+```
+
+### 3. Enable Email/Password sign-in (for local testing only)
+
+In Firebase Console → **Authentication → Sign-in method → Email/Password** → enable it.
+
+Then create a test user under **Authentication → Users → Add user**.
+
+---
+
+## API Testing
+
+### Get a Firebase ID token (test only)
+
+```bash
+curl -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_FIREBASE_WEB_API_KEY" -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"yourpassword","returnSecureToken":true}'
+```
+
+Copy the `idToken` from the response.
+
+> Your **Web API Key** can be found in Firebase Console → Project Settings → General → Your apps → Firebase SDK snippet (`apiKey` field).
+
+### Authenticate against the API
+
+```bash
+curl -X POST http://localhost:8000/api/auth/firebase-login \
+  -H "Content-Type: application/json" \
+  -d '{"firebase_token":"PASTE_ID_TOKEN_HERE"}'
+```
+
+A successful response returns a Sanctum token:
+
+```json
+{
+  "token": "sanctum-token-here",
+  "user": { "id": 1, "name": "...", "email": "..." }
+}
+```
+
+### Get a Sanctum token for an existing user (bypass Firebase)
+
+Useful for quickly testing protected endpoints without going through Firebase.
+
+```bash
+docker compose exec app php artisan tinker
+```
+
+```php
+$user = \App\Models\User::first(); // or ->find(id)
+echo $user->createToken('test')->plainTextToken;
+```
+
+### Call a protected endpoint
+
+```bash
+curl http://localhost:8000/api/hello \
+  -H "Authorization: Bearer YOUR_SANCTUM_TOKEN"
+```
+
+### Available API endpoints
+
+All endpoints below require a valid `Authorization: Bearer` token.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/firebase-login` | Exchange Firebase ID token for Sanctum token |
+| `GET` | `/api/readings/today` | Get today's reading |
+| `GET` | `/api/readings` | Get paginated list of readings |
+| `GET` | `/api/readings/{id}` | Get a specific reading with questions and answers |
+| `GET` | `/api/readings/{id}/questions` | Get questions for a reading |
+| `POST` | `/api/readings/{id}/answers` | Submit quiz answers |
+| `GET` | `/api/profile` | Get authenticated user's profile |

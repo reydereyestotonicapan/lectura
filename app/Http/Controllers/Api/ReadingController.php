@@ -80,26 +80,39 @@ class ReadingController extends Controller
         $total   = count($request->answers);
         $results = [];
 
+        $questionIds = collect($request->answers)->pluck('question_id');
+
+        // Pre-fetch existing responses for this user
+        $existingResponses = Response::where('user_id', $user->id)
+            ->whereIn('question_id', $questionIds)
+            ->get()
+            ->keyBy('question_id');
+
+        // Pre-fetch correct answers
+        $correctAnswerMap = Answer::where('is_correct', true)
+            ->whereIn('question_id', $questionIds)
+            ->pluck('id', 'question_id');
+
         foreach ($request->answers as $submission) {
             $questionId = $submission['question_id'];
             $answerId   = $submission['answer_id'];
 
             // Skip if already answered
-            $existing = Response::where('user_id', $user->id)
-                ->where('question_id', $questionId)
-                ->first();
+            $existing = $existingResponses->get($questionId);
 
             if ($existing) {
                 $results[] = [
-                    'question_id' => $questionId,
-                    'answer_id'   => $answerId,
-                    'is_correct'  => $existing->status === StatusResponse::EXPECTED,
-                    'skipped'     => true,
+                    'question_id'       => $questionId,
+                    'answer_id'         => $answerId,
+                    'is_correct'        => $existing->status === StatusResponse::EXPECTED,
+                    'correct_answer_id' => $correctAnswerMap[$questionId] ?? null,
+                    'skipped'           => true,
                 ];
                 continue;
             }
 
-            $isCorrect = Answer::isCorrect($questionId, $answerId);
+            $isCorrect = isset($correctAnswerMap[$questionId])
+                && $correctAnswerMap[$questionId] === $answerId;
 
             Response::create([
                 'user_id'     => $user->id,
@@ -114,10 +127,11 @@ class ReadingController extends Controller
             }
 
             $results[] = [
-                'question_id' => $questionId,
-                'answer_id'   => $answerId,
-                'is_correct'  => $isCorrect,
-                'skipped'     => false,
+                'question_id'       => $questionId,
+                'answer_id'         => $answerId,
+                'is_correct'        => $isCorrect,
+                'correct_answer_id' => $correctAnswerMap[$questionId] ?? null,
+                'skipped'           => false,
             ];
         }
 

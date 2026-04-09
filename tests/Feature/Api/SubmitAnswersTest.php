@@ -90,6 +90,37 @@ it('skips a question that was already answered and does not create a duplicate r
     $this->assertDatabaseCount('responses', 1);
 });
 
+it('includes correct_answer_id in each result', function () {
+    $response = $this->actingAs($this->user, 'sanctum')
+        ->postJson("/api/readings/{$this->day->id}/answers", [
+            'answers' => [
+                ['question_id' => $this->question->id, 'answer_id' => $this->wrong->id],
+            ],
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('results.0.correct_answer_id', $this->correct->id);
+});
+
+it('includes correct_answer_id even for skipped questions', function () {
+    Response::create([
+        'user_id'     => $this->user->id,
+        'day_id'      => $this->day->id,
+        'question_id' => $this->question->id,
+        'answer_id'   => $this->correct->id,
+        'status'      => StatusResponse::EXPECTED,
+    ]);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->postJson("/api/readings/{$this->day->id}/answers", [
+            'answers' => [
+                ['question_id' => $this->question->id, 'answer_id' => $this->wrong->id],
+            ],
+        ])
+        ->assertStatus(200)
+        ->assertJsonPath('results.0.correct_answer_id', $this->correct->id);
+});
+
 it('returns 401 for unauthenticated submission', function () {
     $this->postJson("/api/readings/{$this->day->id}/answers", [
         'answers' => [['question_id' => $this->question->id, 'answer_id' => $this->correct->id]],

@@ -25,3 +25,5 @@ yarn-error.log
 !/public/images
 supervisord.pid
 storage/app/firebase/
+CLAUDE.md
+.claude

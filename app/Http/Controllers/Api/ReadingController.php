@@ -101,10 +101,14 @@ class ReadingController extends Controller
             $existing = $existingResponses->get($questionId);
 
             if ($existing) {
+                $wasCorrect = $existing->status === StatusResponse::EXPECTED;
+                if ($wasCorrect) {
+                    $correct++;
+                }
                 $results[] = [
                     'question_id'       => $questionId,
-                    'answer_id'         => $answerId,
-                    'is_correct'        => $existing->status === StatusResponse::EXPECTED,
+                    'answer_id'         => $existing->answer_id,
+                    'is_correct'        => $wasCorrect,
                     'correct_answer_id' => $correctAnswerMap[$questionId] ?? null,
                     'skipped'           => true,
                 ];

@@ -38,6 +38,19 @@ export interface ApiUser {
   email: string;
 }
 
+export interface UserResponse {
+  id: number;
+  status: 'Correcta' | 'Incorrecta' | 'Pendiente';
+  question: string;
+  your_answer: string | null;
+  correct_answer: string | null;
+  team_comment: string | null;
+  day_month: string;
+  chapters: string;
+  date: string;
+  created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {

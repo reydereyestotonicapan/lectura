@@ -166,4 +166,35 @@ class ReadingController extends Controller
             'email' => $user->email,
         ]);
     }
+
+    public function responses(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $responses = Response::where('user_id', $user->id)
+            ->with(['day', 'question.correctAnswer', 'answer'])
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return response()->json([
+            'data' => $responses->map(fn ($response) => [
+                'id'              => $response->id,
+                'status'          => $response->status->value,
+                'question'        => $response->question->question,
+                'your_answer'     => $response->answer?->description ?? $response->comment_user,
+                'correct_answer'  => $response->question->correctAnswer?->description,
+                'team_comment'    => $response->comment_team,
+                'day_month'       => $response->day->day_month,
+                'chapters'        => $response->day->chapters,
+                'date'            => $response->day->date_assigned,
+                'created_at'      => $response->created_at->toISOString(),
+            ]),
+            'meta' => [
+                'current_page' => $responses->currentPage(),
+                'last_page'    => $responses->lastPage(),
+                'per_page'     => $responses->perPage(),
+                'total'        => $responses->total(),
+            ],
+        ]);
+    }
 }

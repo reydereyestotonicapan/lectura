@@ -1,5 +1,5 @@
 import client from './client';
-import { Day, Question, PaginatedResponse } from '../types/api';
+import { Day, Question, PaginatedResponse, UserResponse } from '../types/api';
 
 export async function getToday(): Promise<Day> {
   const { data } = await client.get('/readings/today');
@@ -27,4 +27,9 @@ export async function getQuestions(dayId: number): Promise<QuestionsResponse> {
     questions: data.data,
     allAnswered: data.all_answered ?? false,
   };
+}
+
+export async function getResponses(page = 1): Promise<PaginatedResponse<UserResponse>> {
+  const { data } = await client.get('/responses', { params: { page } });
+  return data;
 }

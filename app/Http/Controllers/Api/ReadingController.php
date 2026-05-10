@@ -31,13 +31,14 @@ class ReadingController extends Controller
     {
         $userId = $request->user()->id;
 
-        $days = Day::withCount(['questions as answered_count' => function ($query) use ($userId) {
-            $query->whereExists(function ($sub) use ($userId) {
-                $sub->from('responses')
-                    ->whereColumn('responses.question_id', 'questions.id')
-                    ->where('responses.user_id', $userId);
-            });
-        }])
+        $days = Day::where('date_assigned', '<=', today())
+            ->withCount(['questions as answered_count' => function ($query) use ($userId) {
+                $query->whereExists(function ($sub) use ($userId) {
+                    $sub->from('responses')
+                        ->whereColumn('responses.question_id', 'questions.id')
+                        ->where('responses.user_id', $userId);
+                });
+            }])
             ->orderByDesc('date_assigned')
             ->paginate(20);
 

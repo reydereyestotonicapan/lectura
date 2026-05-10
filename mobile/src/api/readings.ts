@@ -16,7 +16,15 @@ export async function getReading(id: number): Promise<Day> {
   return data.data;
 }
 
-export async function getQuestions(dayId: number): Promise<Question[]> {
+export interface QuestionsResponse {
+  questions: Question[];
+  allAnswered: boolean;
+}
+
+export async function getQuestions(dayId: number): Promise<QuestionsResponse> {
   const { data } = await client.get(`/readings/${dayId}/questions`);
-  return data.data;
+  return {
+    questions: data.data,
+    allAnswered: data.all_answered ?? false,
+  };
 }

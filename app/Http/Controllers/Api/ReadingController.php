@@ -51,9 +51,18 @@ class ReadingController extends Controller
         return new DayResource($day);
     }
 
-    public function questions(Day $day): JsonResponse
+    public function questions(Request $request, Day $day): JsonResponse
     {
-        $day->load(['questions.answers' => fn ($q) => $q->select(['id', 'description', 'question_id'])]);
+        $userId = $request->user()->id;
+
+        // Get question IDs already answered by this user for this day
+        $answeredQuestionIds = Response::where('user_id', $userId)
+            ->where('day_id', $day->id)
+            ->pluck('question_id');
+
+        $day->load(['questions' => function ($query) use ($answeredQuestionIds) {
+            $query->whereNotIn('id', $answeredQuestionIds);
+        }, 'questions.answers' => fn ($q) => $q->select(['id', 'description', 'question_id'])]);
 
         return response()->json([
             'data' => $day->questions->map(fn ($question) => [
@@ -64,6 +73,7 @@ class ReadingController extends Controller
                     'description' => $answer->description,
                 ]),
             ]),
+            'all_answered' => $day->questions->isEmpty() && $answeredQuestionIds->isNotEmpty(),
         ]);
     }
 

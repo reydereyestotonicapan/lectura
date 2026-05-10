@@ -16,6 +16,7 @@ export default function QuizScreen({ route, navigation }: Props) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allAnswered, setAllAnswered] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,8 +24,9 @@ export default function QuizScreen({ route, navigation }: Props) {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getQuestions(dayId);
-      setQuestions(data);
+      const response = await getQuestions(dayId);
+      setQuestions(response.questions);
+      setAllAnswered(response.allAnswered);
     } catch {
       setError('No se pudieron cargar las preguntas. Verifica tu conexión.');
     } finally {
@@ -36,10 +38,10 @@ export default function QuizScreen({ route, navigation }: Props) {
     load();
   }, [load]);
 
-  const allAnswered = questions.length > 0 && Object.keys(selectedAnswers).length === questions.length;
+  const canSubmit = questions.length > 0 && Object.keys(selectedAnswers).length === questions.length;
 
   const handleSubmit = async () => {
-    if (!allAnswered) return;
+    if (!canSubmit) return;
     setIsSubmitting(true);
     try {
       const answers = Object.entries(selectedAnswers).map(([questionId, answerId]) => ({
@@ -64,6 +66,24 @@ export default function QuizScreen({ route, navigation }: Props) {
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={load} />;
 
+  if (allAnswered) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyIcon}>✓</Text>
+        <Text style={styles.emptyTitle}>¡Completado!</Text>
+        <Text style={styles.emptyMessage}>
+          Ya ha contestado las preguntas correspondientes a este día.
+        </Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Volver</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -81,9 +101,9 @@ export default function QuizScreen({ route, navigation }: Props) {
         )}
         ListFooterComponent={
           <TouchableOpacity
-            style={[styles.submitButton, !allAnswered && styles.submitDisabled]}
+            style={[styles.submitButton, !canSubmit && styles.submitDisabled]}
             onPress={handleSubmit}
-            disabled={!allAnswered || isSubmitting}
+            disabled={!canSubmit || isSubmitting}
           >
             <Text style={styles.submitText}>
               {isSubmitting ? 'Enviando…' : 'Enviar respuestas'}
@@ -107,4 +127,41 @@ const styles = StyleSheet.create({
   },
   submitDisabled: { backgroundColor: '#c7d2fe' },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#f9fafb',
+  },
+  emptyIcon: {
+    fontSize: 48,
+    color: '#10b981',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  backButton: {
+    borderWidth: 1.5,
+    borderColor: '#6366f1',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  backButtonText: {
+    color: '#6366f1',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

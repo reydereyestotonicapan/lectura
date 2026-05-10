@@ -3,7 +3,8 @@ import { SubmitResponse } from '../types/api';
 
 interface AnswerPayload {
   question_id: number;
-  answer_id: number;
+  answer_id?: number;
+  comment_user?: string;
 }
 
 export async function submitAnswers(

@@ -20,8 +20,10 @@ export interface Day {
 
 export interface SubmitResult {
   question_id: number;
-  answer_id: number;
-  is_correct: boolean;
+  answer_id: number | null;
+  comment_user: string | null;
+  is_correct: boolean | null;
+  is_open_question: boolean;
   correct_answer_id: number | null;
   skipped: boolean;
 }

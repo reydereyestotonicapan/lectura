@@ -82,7 +82,8 @@ class ReadingController extends Controller
         $request->validate([
             'answers'                => 'required|array|min:1',
             'answers.*.question_id'  => 'required|integer|exists:questions,id',
-            'answers.*.answer_id'    => 'required|integer|exists:answers,id',
+            'answers.*.answer_id'    => 'nullable|integer|exists:answers,id',
+            'answers.*.comment_user' => 'nullable|string|max:1000',
         ]);
 
         $user    = $request->user();
@@ -104,8 +105,9 @@ class ReadingController extends Controller
             ->pluck('id', 'question_id');
 
         foreach ($request->answers as $submission) {
-            $questionId = $submission['question_id'];
-            $answerId   = $submission['answer_id'];
+            $questionId  = $submission['question_id'];
+            $answerId    = $submission['answer_id'] ?? null;
+            $commentUser = $submission['comment_user'] ?? null;
 
             // Skip if already answered
             $existing = $existingResponses->get($questionId);
@@ -118,13 +120,41 @@ class ReadingController extends Controller
                 $results[] = [
                     'question_id'       => $questionId,
                     'answer_id'         => $existing->answer_id,
+                    'comment_user'      => $existing->comment_user,
                     'is_correct'        => $wasCorrect,
+                    'is_open_question'  => $existing->answer_id === null,
                     'correct_answer_id' => $correctAnswerMap[$questionId] ?? null,
                     'skipped'           => true,
                 ];
                 continue;
             }
 
+            // Open question (no answer_id, has comment)
+            $isOpenQuestion = $answerId === null && $commentUser !== null;
+            
+            if ($isOpenQuestion) {
+                Response::create([
+                    'user_id'      => $user->id,
+                    'day_id'       => $day->id,
+                    'question_id'  => $questionId,
+                    'answer_id'    => null,
+                    'comment_user' => $commentUser,
+                    'status'       => StatusResponse::PENDING,
+                ]);
+
+                $results[] = [
+                    'question_id'       => $questionId,
+                    'answer_id'         => null,
+                    'comment_user'      => $commentUser,
+                    'is_correct'        => null, // Pending review
+                    'is_open_question'  => true,
+                    'correct_answer_id' => null,
+                    'skipped'           => false,
+                ];
+                continue;
+            }
+
+            // Multiple choice question
             $isCorrect = isset($correctAnswerMap[$questionId])
                 && $correctAnswerMap[$questionId] === $answerId;
 
@@ -143,7 +173,9 @@ class ReadingController extends Controller
             $results[] = [
                 'question_id'       => $questionId,
                 'answer_id'         => $answerId,
+                'comment_user'      => null,
                 'is_correct'        => $isCorrect,
+                'is_open_question'  => false,
                 'correct_answer_id' => $correctAnswerMap[$questionId] ?? null,
                 'skipped'           => false,
             ];

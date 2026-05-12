@@ -15,6 +15,7 @@ class DayResource extends JsonResource
             'chapters'      => $this->chapters,
             'day_month'     => $this->day_month,
             'questions'     => QuestionResource::collection($this->whenLoaded('questions')),
+            'questions_count' => $this->when(isset($this->questions_count), $this->questions_count),
             'answered_count' => $this->when(isset($this->answered_count), $this->answered_count),
         ];
     }

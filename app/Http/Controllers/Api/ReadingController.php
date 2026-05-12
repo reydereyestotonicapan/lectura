@@ -32,6 +32,7 @@ class ReadingController extends Controller
         $userId = $request->user()->id;
 
         $days = Day::where('date_assigned', '<=', today())
+            ->withCount('questions')
             ->withCount(['questions as answered_count' => function ($query) use ($userId) {
                 $query->whereExists(function ($sub) use ($userId) {
                     $sub->from('responses')

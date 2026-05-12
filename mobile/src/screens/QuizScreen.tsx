@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { Colors } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TodayStackParamList } from '../navigation/types';
 import { getQuestions } from '../api/readings';
@@ -141,23 +142,23 @@ export default function QuizScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: Colors.background },
   list: { padding: 16, paddingBottom: 32 },
   submitButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
   },
-  submitDisabled: { backgroundColor: '#c7d2fe' },
+  submitDisabled: { backgroundColor: '#d4b89a' },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
-    backgroundColor: '#f9fafb',
+    backgroundColor: Colors.background,
   },
   emptyIcon: {
     fontSize: 48,
@@ -179,13 +180,13 @@ const styles = StyleSheet.create({
   },
   backButton: {
     borderWidth: 1.5,
-    borderColor: '#6366f1',
+    borderColor: Colors.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
   },
   backButtonText: {
-    color: '#6366f1',
+    color: Colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },

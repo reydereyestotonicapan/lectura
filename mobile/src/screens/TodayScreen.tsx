@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TodayStackParamList } from '../navigation/types';
+import { Colors } from '../theme';
 import { getToday } from '../api/readings';
 import { Day } from '../types/api';
 import LoadingState from '../components/LoadingState';
@@ -47,7 +48,7 @@ export default function TodayScreen({ navigation }: Props) {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.dayMonth}>{day.day_month}</Text>
       <Text style={styles.date}>
-        {new Date(day.date_assigned).toLocaleDateString('es-ES', {
+        {new Date(day.date_assigned + 'T00:00:00').toLocaleDateString('es-ES', {
           weekday: 'long',
           year: 'numeric',
           month: 'long',
@@ -77,8 +78,8 @@ export default function TodayScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48 },
-  dayMonth: { fontSize: 13, fontWeight: '600', color: '#6366f1', textTransform: 'uppercase', marginBottom: 4 },
-  date: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 20, textTransform: 'capitalize' },
+  dayMonth: { fontSize: 13, fontWeight: '600', color: Colors.primary, textTransform: 'uppercase', marginBottom: 4 },
+  date: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary, marginBottom: 20, textTransform: 'capitalize' },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 6 },
   chapters: { fontSize: 18, color: '#1f2937', fontWeight: '500' },
   button: {
-    backgroundColor: '#6366f1',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

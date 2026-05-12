@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
+import { Colors } from '../theme';
 import { firebaseLogin } from '../api/auth';
 
 // Lazy load Google Sign-In to avoid crashes in Expo Go
@@ -55,7 +56,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Lectura Diaria</Text>
+      <Text style={styles.title}>Lámpara</Text>
       <Text style={styles.subtitle}>Lecturas bíblicas y quizzes diarios</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleGoogleSignIn} disabled={isLoading}>
@@ -75,12 +76,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
-    backgroundColor: '#f9fafb',
+    backgroundColor: Colors.background,
   },
-  title: { fontSize: 28, fontWeight: '700', color: '#111827', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#6b7280', marginBottom: 48, textAlign: 'center' },
+  title: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary, marginBottom: 8 },
+  subtitle: { fontSize: 15, color: Colors.textMuted, marginBottom: 48, textAlign: 'center' },
   button: {
-    backgroundColor: '#6366f1',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,

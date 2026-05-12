@@ -5,10 +5,11 @@ import TodayStack from './TodayStack';
 import ReadingsStack from './ReadingsStack';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { Colors } from '../theme';
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();
 
-const PRIMARY = '#6366f1';
+const PRIMARY = Colors.primary;
 
 export default function AppTabs() {
   return (

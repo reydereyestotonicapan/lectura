@@ -1,5 +1,5 @@
 import client from './client';
-import { Day, Question, PaginatedResponse } from '../types/api';
+import { Day, Question, PaginatedResponse, UserResponse } from '../types/api';
 
 export async function getToday(): Promise<Day> {
   const { data } = await client.get('/readings/today');
@@ -16,7 +16,20 @@ export async function getReading(id: number): Promise<Day> {
   return data.data;
 }
 
-export async function getQuestions(dayId: number): Promise<Question[]> {
+export interface QuestionsResponse {
+  questions: Question[];
+  allAnswered: boolean;
+}
+
+export async function getQuestions(dayId: number): Promise<QuestionsResponse> {
   const { data } = await client.get(`/readings/${dayId}/questions`);
-  return data.data;
+  return {
+    questions: data.data,
+    allAnswered: data.all_answered ?? false,
+  };
+}
+
+export async function getResponses(page = 1): Promise<PaginatedResponse<UserResponse>> {
+  const { data } = await client.get('/responses', { params: { page } });
+  return data;
 }

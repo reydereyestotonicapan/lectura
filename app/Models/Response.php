@@ -17,6 +17,7 @@ class Response extends Model
         'day_id',
         'question_id',
         'answer_id',
+        'comment_user',
         'status',
     ];
 

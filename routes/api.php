@@ -16,4 +16,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/readings/{day}/questions', [ReadingController::class, 'questions']);
     Route::post('/readings/{day}/answers', [ReadingController::class, 'submitAnswers']);
     Route::get('/profile', [ReadingController::class, 'profile']);
+    Route::get('/responses', [ReadingController::class, 'responses']);
 });

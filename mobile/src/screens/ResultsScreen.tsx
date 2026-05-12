@@ -28,7 +28,7 @@ export default function ResultsScreen({ route, navigation }: Props) {
         ListFooterComponent={
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('Today')}
+            onPress={() => navigation.popToTop()}
           >
             <Text style={styles.buttonText}>Volver a inicio</Text>
           </TouchableOpacity>

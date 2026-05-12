@@ -8,33 +8,48 @@ interface Props {
 }
 
 export default function ResultItem({ question, result }: Props) {
+  const isOpenQuestion = result.is_open_question;
+
   return (
     <View style={styles.card}>
       <Text style={styles.questionText}>{question.description}</Text>
-      {question.answers.map((answer) => {
-        const isUserChoice = answer.id === result.answer_id;
-        const isCorrect = answer.id === result.correct_answer_id;
-
-        let rowStyle = styles.answer;
-        let textStyle = styles.answerText;
-
-        if (isUserChoice && result.is_correct) {
-          rowStyle = { ...styles.answer, ...styles.correct };
-          textStyle = { ...styles.answerText, ...styles.correctText };
-        } else if (isUserChoice && !result.is_correct) {
-          rowStyle = { ...styles.answer, ...styles.wrong };
-          textStyle = { ...styles.answerText, ...styles.wrongText };
-        } else if (isCorrect && !result.is_correct) {
-          rowStyle = { ...styles.answer, ...styles.correct };
-          textStyle = { ...styles.answerText, ...styles.correctText };
-        }
-
-        return (
-          <View key={answer.id} style={rowStyle}>
-            <Text style={textStyle}>{answer.description}</Text>
+      
+      {isOpenQuestion ? (
+        <View>
+          <View style={styles.pendingBadge}>
+            <Text style={styles.pendingText}>Pendiente de revisión</Text>
           </View>
-        );
-      })}
+          <View style={styles.commentBox}>
+            <Text style={styles.commentLabel}>Tu respuesta:</Text>
+            <Text style={styles.commentText}>{result.comment_user}</Text>
+          </View>
+        </View>
+      ) : (
+        question.answers.map((answer) => {
+          const isUserChoice = answer.id === result.answer_id;
+          const isCorrect = answer.id === result.correct_answer_id;
+
+          let rowStyle = styles.answer;
+          let textStyle = styles.answerText;
+
+          if (isUserChoice && result.is_correct) {
+            rowStyle = { ...styles.answer, ...styles.correct };
+            textStyle = { ...styles.answerText, ...styles.correctText };
+          } else if (isUserChoice && !result.is_correct) {
+            rowStyle = { ...styles.answer, ...styles.wrong };
+            textStyle = { ...styles.answerText, ...styles.wrongText };
+          } else if (isCorrect && !result.is_correct) {
+            rowStyle = { ...styles.answer, ...styles.correct };
+            textStyle = { ...styles.answerText, ...styles.correctText };
+          }
+
+          return (
+            <View key={answer.id} style={rowStyle}>
+              <Text style={textStyle}>{answer.description}</Text>
+            </View>
+          );
+        })
+      )}
     </View>
   );
 }
@@ -63,4 +78,32 @@ const styles = StyleSheet.create({
   answerText: { fontSize: 14, color: '#374151' },
   correctText: { color: '#15803d', fontWeight: '600' },
   wrongText: { color: '#b91c1c', fontWeight: '600' },
+  pendingBadge: {
+    backgroundColor: '#fef9c3',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  pendingText: {
+    color: '#ca8a04',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  commentBox: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 12,
+  },
+  commentLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
 });

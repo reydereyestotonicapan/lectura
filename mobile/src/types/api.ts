@@ -20,8 +20,10 @@ export interface Day {
 
 export interface SubmitResult {
   question_id: number;
-  answer_id: number;
-  is_correct: boolean;
+  answer_id: number | null;
+  comment_user: string | null;
+  is_correct: boolean | null;
+  is_open_question: boolean;
   correct_answer_id: number | null;
   skipped: boolean;
 }
@@ -36,6 +38,19 @@ export interface ApiUser {
   id: number;
   name: string;
   email: string;
+}
+
+export interface UserResponse {
+  id: number;
+  status: 'Correcta' | 'Incorrecta' | 'Pendiente';
+  question: string;
+  your_answer: string | null;
+  correct_answer: string | null;
+  team_comment: string | null;
+  day_month: string;
+  chapters: string;
+  date: string;
+  created_at: string;
 }
 
 export interface PaginatedResponse<T> {

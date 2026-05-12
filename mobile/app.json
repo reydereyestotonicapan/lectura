@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Lámpara",
-    "slug": "lectura",
-    "scheme": "lectura",
+    "slug": "lampara",
+    "scheme": "lampara",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -31,6 +31,11 @@
       "expo-secure-store",
       "expo-web-browser",
       "@react-native-google-signin/google-signin"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "28e73210-d008-4918-a6a1-75d18790dd52"
+      }
+    }
   }
 }

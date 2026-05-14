@@ -15,6 +15,7 @@ export interface Day {
   chapters: string;
   day_month: string;
   questions?: Question[];
+  questions_count?: number;
   answered_count?: number;
 }
 

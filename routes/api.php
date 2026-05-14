@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ReadingController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/firebase-login', [AuthController::class, 'firebaseLogin']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('hello', function () {

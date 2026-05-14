@@ -1,24 +1,46 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "placeholder-project",
-    "storage_bucket": "placeholder-project.appspot.com"
+    "project_number": "860937846633",
+    "project_id": "bible-reading-quiz",
+    "storage_bucket": "bible-reading-quiz.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+        "mobilesdk_app_id": "1:860937846633:android:37f778bfbaeea5b0a3c7f8",
         "android_client_info": {
-          "package_name": "com.mmenchu.lectura"
+          "package_name": "org.reydereyestotonicapan.lampara"
         }
       },
-      "oauth_client": [],
-      "api_key": [
+      "oauth_client": [
         {
-          "current_key": "placeholder_api_key"
+          "client_id": "860937846633-a1722rqjsd3259luaipesq3iq8tf3lbv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.reydereyestotonicapan.lampara",
+            "certificate_hash": "01858af1f68d6d22b225ad6e4d914a1b1fe59439"
+          }
+        },
+        {
+          "client_id": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
-      "services": {}
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU_ndV6Tvl9VfJp72ufgvUKspmkKzDb4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

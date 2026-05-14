@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { Colors } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { ReadingsStackParamList } from '../navigation/types';
@@ -11,7 +12,7 @@ import EmptyState from '../components/EmptyState';
 type Props = NativeStackScreenProps<ReadingsStackParamList, 'ReadingsList'>;
 
 function DayCard({ day, onPress }: { day: Day; onPress: () => void }) {
-  const totalQuestions = day.questions?.length ?? 1; // Assume at least 1 if not loaded
+  const totalQuestions = day.questions?.length ?? day.questions_count ?? 0;
   const answeredCount = day.answered_count ?? 0;
   const pendingCount = Math.max(0, totalQuestions - answeredCount);
   const isCompleted = pendingCount === 0 && answeredCount > 0;
@@ -34,7 +35,7 @@ function DayCard({ day, onPress }: { day: Day; onPress: () => void }) {
         ) : null}
       </View>
       <Text style={styles.date}>
-        {new Date(day.date_assigned).toLocaleDateString('es-ES', {
+        {new Date(day.date_assigned + 'T00:00:00').toLocaleDateString('es-ES', {
           weekday: 'long',
           day: 'numeric',
           month: 'short',
@@ -96,7 +97,7 @@ export default function ReadingsScreen({ navigation }: Props) {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
@@ -114,7 +115,7 @@ export default function ReadingsScreen({ navigation }: Props) {
         <Text style={styles.header}>Selecciona un día para responder</Text>
       }
       ListFooterComponent={
-        isFetchingMore ? <ActivityIndicator color="#6366f1" style={styles.footer} /> : null
+        isFetchingMore ? <ActivityIndicator color={Colors.primary} style={styles.footer} /> : null
       }
       renderItem={({ item }) => (
         <DayCard
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   dayMonth: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6366f1',
+    color: Colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

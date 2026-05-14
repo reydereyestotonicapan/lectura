@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { Colors } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TodayStackParamList } from '../navigation/types';
 import ResultItem from '../components/ResultItem';
@@ -39,9 +40,9 @@ export default function ResultsScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: Colors.background },
   scoreHeader: {
-    backgroundColor: '#6366f1',
+    backgroundColor: Colors.primary,
     padding: 24,
     alignItems: 'center',
   },
@@ -49,11 +50,11 @@ const styles = StyleSheet.create({
   list: { padding: 16, paddingBottom: 32 },
   button: {
     borderWidth: 1.5,
-    borderColor: '#6366f1',
+    borderColor: Colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
   },
-  buttonText: { color: '#6366f1', fontSize: 16, fontWeight: '600' },
+  buttonText: { color: Colors.primary, fontSize: 16, fontWeight: '600' },
 });

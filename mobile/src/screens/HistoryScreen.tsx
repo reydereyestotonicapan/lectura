@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { getResponses } from '../api/readings';
+import { Colors } from '../theme';
 import { UserResponse } from '../types/api';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
@@ -114,7 +115,7 @@ export default function HistoryScreen() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
@@ -128,7 +129,7 @@ export default function HistoryScreen() {
       contentContainerStyle={styles.list}
       onEndReached={loadMore}
       onEndReachedThreshold={0.3}
-      ListFooterComponent={isFetchingMore ? <ActivityIndicator color="#6366f1" style={styles.footer} /> : null}
+      ListFooterComponent={isFetchingMore ? <ActivityIndicator color={Colors.primary} style={styles.footer} /> : null}
       renderItem={({ item }) => <ResponseCard response={item} />}
     />
   );
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
   dayMonth: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6366f1',
+    color: Colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },

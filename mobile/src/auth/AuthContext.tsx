@@ -9,8 +9,8 @@ import { ApiUser } from '../types/api';
 // Set SKIP_AUTH to true and paste your token from:
 //   php artisan db:seed --class=DevTokenSeeder
 // ═══════════════════════════════════════════════════════════════════════════
-const SKIP_AUTH = true;
-const DEV_TOKEN = '3|ccX07eTQLHTP4yfVs87que9GR0IZYWzHch2FA9Llb0cb6703'; // Paste token here, e.g., '1|abc123...'
+const SKIP_AUTH = false;
+const DEV_TOKEN = '2|1EHHb5MOmhpwSiTwzZ5kPagxJdbB0w5l8KkeU1tB5eead45e'; // Paste token here, e.g., '1|abc123...'
 
 const DEV_USER: ApiUser = {
   id: 1,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { Colors } from '../theme';
 import { Question } from '../types/api';
 
 interface Props {
@@ -76,9 +77,9 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 8,
   },
-  optionSelected: { borderColor: '#6366f1', backgroundColor: '#eef2ff' },
+  optionSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   optionText: { fontSize: 14, color: '#374151' },
-  optionTextSelected: { color: '#4338ca', fontWeight: '600' },
+  optionTextSelected: { color: Colors.primary, fontWeight: '600' },
   textArea: {
     borderWidth: 1.5,
     borderColor: '#e5e7eb',

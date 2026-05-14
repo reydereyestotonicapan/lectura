@@ -61,18 +61,33 @@ class AuthController extends Controller
         $email = $claims->get('email');
         $name = $claims->get('name') ?? $email;
 
-        $user = User::firstOrCreate(
-            ['firebase_uid' => $uid],
-            [
-                'name' => $name,
-                'email' => $email,
-                'password' => bcrypt(Str::random(32)),
-            ]
-        );
+        // First, try to find by firebase_uid
+        $user = User::where('firebase_uid', $uid)->first();
 
-        // Sync email in case it changed in Firebase
-        if ($user->email !== $email) {
-            $user->update(['email' => $email]);
+        if (! $user) {
+            // Check if a user with this email already exists (e.g., from email/password registration)
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                // Link the existing account to this Firebase UID
+                $user->update(['firebase_uid' => $uid]);
+            } else {
+                // Create a new user
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $email,
+                    'firebase_uid' => $uid,
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+            }
+        }
+
+        // Sync email/name in case they changed in Firebase
+        if ($user->email !== $email || $user->name !== $name) {
+            $user->update([
+                'email' => $email,
+                'name' => $name,
+            ]);
         }
 
         $token = $user->createToken('mobile')->plainTextToken;

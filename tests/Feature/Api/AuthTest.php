@@ -74,6 +74,36 @@ it('returns a token for an existing user without creating a duplicate', function
     $this->assertDatabaseCount('users', 1);
 });
 
+it('links firebase account to existing user with same email', function () {
+    // User created via email/password (no firebase_uid)
+    $user = User::factory()->create([
+        'name'         => 'Email User',
+        'email'        => 'emailuser@example.com',
+        'firebase_uid' => null,
+    ]);
+
+    $firebaseUid = 'new-firebase-uid-xyz';
+    $mockToken = mockFirebaseToken($firebaseUid, 'emailuser@example.com', 'Google Name');
+
+    $mockAuth = Mockery::mock(FirebaseAuth::class);
+    $mockAuth->shouldReceive('verifyIdToken')->once()->andReturn($mockToken);
+
+    $this->app->instance(FirebaseAuth::class, $mockAuth);
+
+    $response = $this->postJson('/api/auth/firebase-login', ['firebase_token' => 'valid-token']);
+
+    $response->assertStatus(200)
+        ->assertJsonFragment(['email' => 'emailuser@example.com']);
+
+    // Should link the firebase_uid to the existing user, not create a new one
+    $this->assertDatabaseCount('users', 1);
+    $this->assertDatabaseHas('users', [
+        'id' => $user->id,
+        'firebase_uid' => $firebaseUid,
+        'name' => 'Google Name', // Name should be updated from Firebase
+    ]);
+});
+
 // ---------------------------------------------------------------------------
 // Helper: build a fake verified Firebase token with the given claims.
 // Must implement UnencryptedToken because verifyIdToken() has that return type.

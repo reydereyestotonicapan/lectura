@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput } from 'react-native';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useAuth } from '../auth/AuthContext';
 import { Colors } from '../theme';
 import { emailLogin, firebaseLogin } from '../api/auth';
+import { firebaseAuth } from '../firebase';
 
 // Lazy load Google Sign-In to avoid crashes in Expo Go
 let GoogleSignin: any = null;
@@ -76,13 +78,17 @@ export default function LoginScreen() {
 
       if (!idToken) throw new Error('No id_token received');
 
-      const { token, user } = await firebaseLogin(idToken);
+      const googleCredential = GoogleAuthProvider.credential(idToken);
+      const userCredential = await signInWithCredential(firebaseAuth, googleCredential);
+      const firebaseIdToken = await userCredential.user.getIdToken();
+
+      const { token, user } = await firebaseLogin(firebaseIdToken);
       await signIn(token, user);
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled — do nothing
       } else {
-        Alert.alert('Error', 'No se pudo iniciar sesión. Inténtalo de nuevo.');
+          Alert.alert('Error', `Code: ${error.code}\n${error.message}`);
       }
     } finally {
       setIsLoading(false);

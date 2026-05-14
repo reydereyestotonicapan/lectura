@@ -21,7 +21,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mmenchu.lectura",
+      "package": "org.reydereyestotonicapan.lampara",
       "googleServicesFile": "./google-services.json"
     },
     "web": {

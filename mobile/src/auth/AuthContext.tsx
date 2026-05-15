@@ -1,7 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { signOut as firebaseSignOut } from 'firebase/auth';
 import { getToken, saveToken, deleteToken } from '../storage/secureStore';
 import { setSignOutHandler } from '../api/client';
+import { firebaseAuth } from '../firebase';
 import { ApiUser } from '../types/api';
+
+// Lazy load Google Sign-In to avoid crashes in Expo Go
+let GoogleSignin: any = null;
+try {
+  GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+} catch (e) {
+  // Running in Expo Go
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ⚠️ DEV MODE CONFIGURATION
@@ -36,6 +46,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     if (SKIP_AUTH) return; // Prevent sign out in dev mode
+    
+    // Sign out from Google Sign-In (clears cached account)
+    if (GoogleSignin) {
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // Ignore errors if not signed in with Google
+      }
+    }
+    
+    // Sign out from Firebase
+    try {
+      await firebaseSignOut(firebaseAuth);
+    } catch (e) {
+      // Ignore errors if not signed in with Firebase
+    }
+    
+    // Clear app token
     await deleteToken();
     setUser(null);
     setHasToken(false);

@@ -1,13 +1,20 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
 import { Colors } from '../theme';
 import { getToday } from '../api/readings';
 import { Day } from '../types/api';
+import { ChapterWithProgress } from '../types/chapter';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
+import ChapterListItem from '../components/ChapterListItem';
+import ProgressBar from '../components/ProgressBar';
+import { useChapterProgress } from '../hooks/useChapterProgress';
+import { useUserSettings } from '../hooks/useUserSettings';
+import { openChapter } from '../services/deepLink';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'Today'>;
 
@@ -16,6 +23,25 @@ export default function TodayScreen({ navigation }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  // Chapter progress hook - only active when day is loaded
+  const {
+    chapters,
+    isLoading: isLoadingChapters,
+    error: chapterError,
+    toggleChapter,
+    progressCount,
+    totalCount,
+  } = useChapterProgress(day?.id ?? null);
+
+  // User settings hook for Bible source preference
+  const { settings, refreshSettings } = useUserSettings();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshSettings();
+    }, [refreshSettings])
+  );
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -35,6 +61,22 @@ export default function TodayScreen({ navigation }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Handle opening a chapter in external Bible source
+  const handleReadChapter = useCallback(
+    async (chapter: ChapterWithProgress) => {
+      await openChapter(chapter.book, chapter.chapter_number, settings.bible_source);
+    },
+    [settings.bible_source]
+  );
+
+  // Handle toggling chapter read status
+  const handleToggleChapter = useCallback(
+    (chapterId: number) => {
+      toggleChapter(chapterId);
+    },
+    [toggleChapter]
+  );
 
   if (isLoading) return <LoadingState />;
   if (error) return <ErrorState message={error} onRetry={load} />;
@@ -60,6 +102,28 @@ export default function TodayScreen({ navigation }: Props) {
         <Text style={styles.chapters}>{day.chapters}</Text>
       </View>
 
+      {/* Progress Bar */}
+      <ProgressBar progressCount={progressCount} totalCount={totalCount} />
+
+      {/* Chapter List */}
+      {isLoadingChapters ? (
+        <Text style={styles.loadingText}>Cargando capítulos...</Text>
+      ) : chapterError ? (
+        <Text style={styles.errorText}>{chapterError}</Text>
+      ) : (
+        <View style={styles.chapterList}>
+          {chapters.map((chapter) => (
+            <ChapterListItem
+              key={chapter.id}
+              chapter={chapter}
+              onToggle={handleToggleChapter}
+              onRead={handleReadChapter}
+            />
+          ))}
+        </View>
+      )}
+
+      {/* Quiz Button or Completed Badge */}
       {alreadyAnswered ? (
         <View style={styles.completedBadge}>
           <Text style={styles.completedText}>Quiz completado</Text>
@@ -84,7 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -92,6 +156,21 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 6 },
   chapters: { fontSize: 18, color: '#1f2937', fontWeight: '500' },
+  chapterList: {
+    marginBottom: 24,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#dc2626',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
   button: {
     backgroundColor: Colors.primary,
     paddingVertical: 16,

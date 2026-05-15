@@ -4,6 +4,7 @@ import { AppTabsParamList } from './types';
 import TodayStack from './TodayStack';
 import ReadingsStack from './ReadingsStack';
 import HistoryScreen from '../screens/HistoryScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { Colors } from '../theme';
 
@@ -23,6 +24,7 @@ export default function AppTabs() {
       <Tab.Screen name="TodayTab" component={TodayStack} options={{ title: 'Hoy' }} />
       <Tab.Screen name="ReadingsTab" component={ReadingsStack} options={{ title: 'Lecturas' }} />
       <Tab.Screen name="History" component={HistoryScreen} options={{ title: 'Resultados' }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tab.Navigator>
   );

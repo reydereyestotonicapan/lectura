@@ -7,6 +7,7 @@ use App\Filament\Resources\DayResource\Pages\EditDay;
 use App\Filament\Resources\DayResource\Pages\ListDays;
 use App\Filament\Resources\DayResource\RelationManagers\QuestionsRelationManager;
 use App\Models\Day;
+use App\Models\DayChapter;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -37,15 +38,45 @@ class DayResource extends Resource
                         }
                     }),
                 Forms\Components\TextInput::make('chapters')
-                    ->label('Lectura del día')
-                    ->required()
-                    ->maxLength(255),
+                    ->label('Lectura del día (auto-generado)')
+                    ->maxLength(255)
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->helperText('Este campo se genera automáticamente a partir de los capítulos agregados abajo.'),
                 Forms\Components\TextInput::make('day_month')
                     ->label('Día')
                     ->required()
                     ->maxLength(6)
                     ->default(date('d').'/'.date('m'))
                     ->readOnly(),
+                Forms\Components\Repeater::make('dayChapters')
+                    ->relationship()
+                    ->label('Capítulos')
+                    ->schema([
+                        Forms\Components\Select::make('book')
+                            ->label('Libro')
+                            ->options(array_combine(
+                                DayChapter::getValidBookNames(),
+                                DayChapter::getValidBookNames()
+                            ))
+                            ->required()
+                            ->searchable(),
+                        Forms\Components\TextInput::make('chapter_number')
+                            ->label('Capítulo')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1),
+                    ])
+                    ->orderColumn('order')
+                    ->defaultItems(1)
+                    ->addActionLabel('Agregar capítulo')
+                    ->collapsible()
+                    ->itemLabel(fn (array $state): ?string =>
+                        $state['book'] && $state['chapter_number']
+                            ? "{$state['book']} {$state['chapter_number']}"
+                            : null
+                    )
+                    ->columnSpanFull(),
             ]);
     }
 

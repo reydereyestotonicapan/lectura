@@ -85,7 +85,6 @@ export default function TodayScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.dayMonth}>{day.day_month}</Text>
       <Text style={styles.date}>
         {new Date(day.date_assigned + 'T00:00:00').toLocaleDateString('es-ES', {
           weekday: 'long',
@@ -94,10 +93,6 @@ export default function TodayScreen({ navigation }: Props) {
           day: 'numeric',
         })}
       </Text>
-      <View style={styles.card}>
-        <Text style={styles.label}>Lectura</Text>
-        <Text style={styles.chapters}>{day.chapters}</Text>
-      </View>
 
       {/* Chapter List */}
       {isLoadingChapters ? (
@@ -136,20 +131,7 @@ export default function TodayScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48 },
-  dayMonth: { fontSize: 13, fontWeight: '600', color: Colors.primary, textTransform: 'uppercase', marginBottom: 4 },
-  date: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary, marginBottom: 20, textTransform: 'capitalize' },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  label: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 6 },
-  chapters: { fontSize: 18, color: '#1f2937', fontWeight: '500' },
+  date: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary, marginBottom: 20, textTransform: 'capitalize' },
   chapterList: {
     marginBottom: 24,
   },

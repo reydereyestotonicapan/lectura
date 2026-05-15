@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChapterProgressController;
 use App\Http\Controllers\Api\ReadingController;
+use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/firebase-login', [AuthController::class, 'firebaseLogin']);
@@ -18,4 +20,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/readings/{day}/answers', [ReadingController::class, 'submitAnswers']);
     Route::get('/profile', [ReadingController::class, 'profile']);
     Route::get('/responses', [ReadingController::class, 'responses']);
+
+    // Chapter progress routes
+    Route::get('/readings/{day}/chapters', [ChapterProgressController::class, 'show']);
+    Route::post('/chapters/{chapter}/progress', [ChapterProgressController::class, 'markRead']);
+    Route::delete('/chapters/{chapter}/progress', [ChapterProgressController::class, 'markUnread']);
+
+    // User settings routes
+    Route::get('/settings', [UserSettingsController::class, 'show']);
+    Route::put('/settings', [UserSettingsController::class, 'update']);
 });

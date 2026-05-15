@@ -11,7 +11,6 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import ChapterListItem from '../components/ChapterListItem';
-import ProgressBar from '../components/ProgressBar';
 import { useChapterProgress } from '../hooks/useChapterProgress';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { openChapter } from '../services/deepLink';
@@ -30,8 +29,6 @@ export default function TodayScreen({ navigation }: Props) {
     isLoading: isLoadingChapters,
     error: chapterError,
     toggleChapter,
-    progressCount,
-    totalCount,
   } = useChapterProgress(day?.id ?? null);
 
   // User settings hook for Bible source preference
@@ -101,9 +98,6 @@ export default function TodayScreen({ navigation }: Props) {
         <Text style={styles.label}>Lectura</Text>
         <Text style={styles.chapters}>{day.chapters}</Text>
       </View>
-
-      {/* Progress Bar */}
-      <ProgressBar progressCount={progressCount} totalCount={totalCount} />
 
       {/* Chapter List */}
       {isLoadingChapters ? (

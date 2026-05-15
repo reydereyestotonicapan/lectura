@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
@@ -11,9 +11,9 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import ChapterListItem from '../components/ChapterListItem';
-import ProgressBar from '../components/ProgressBar';
 import { useChapterProgress } from '../hooks/useChapterProgress';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { useAuth } from '../auth/AuthContext';
 import { openChapter } from '../services/deepLink';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'Today'>;
@@ -30,9 +30,29 @@ export default function TodayScreen({ navigation }: Props) {
     isLoading: isLoadingChapters,
     error: chapterError,
     toggleChapter,
-    progressCount,
-    totalCount,
   } = useChapterProgress(day?.id ?? null);
+
+  const { isGuest, exitGuestMode } = useAuth();
+
+  useLayoutEffect(() => {
+    if (isGuest) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={exitGuestMode} style={{ marginRight: 16 }}>
+            <Text style={{ color: Colors.primary, fontWeight: '600' }}>Iniciar sesión</Text>
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={() => navigation.navigate('ReadingsList')} style={{ marginRight: 16 }}>
+            <Text style={{ color: Colors.primary, fontWeight: '600' }}>Lecturas</Text>
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [navigation, isGuest, exitGuestMode]);
 
   // User settings hook for Bible source preference
   const { settings, refreshSettings } = useUserSettings();
@@ -73,9 +93,20 @@ export default function TodayScreen({ navigation }: Props) {
   // Handle toggling chapter read status
   const handleToggleChapter = useCallback(
     (chapterId: number) => {
+      if (isGuest) {
+        Alert.alert(
+          'Inicia sesión',
+          'Registra tu progreso de lectura creando una cuenta.',
+          [
+            { text: 'Ahora no', style: 'cancel' },
+            { text: 'Iniciar sesión', onPress: exitGuestMode },
+          ]
+        );
+        return;
+      }
       toggleChapter(chapterId);
     },
-    [toggleChapter]
+    [toggleChapter, isGuest, exitGuestMode]
   );
 
   if (isLoading) return <LoadingState />;
@@ -88,7 +119,6 @@ export default function TodayScreen({ navigation }: Props) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.dayMonth}>{day.day_month}</Text>
       <Text style={styles.date}>
         {new Date(day.date_assigned + 'T00:00:00').toLocaleDateString('es-ES', {
           weekday: 'long',
@@ -97,13 +127,6 @@ export default function TodayScreen({ navigation }: Props) {
           day: 'numeric',
         })}
       </Text>
-      <View style={styles.card}>
-        <Text style={styles.label}>Lectura</Text>
-        <Text style={styles.chapters}>{day.chapters}</Text>
-      </View>
-
-      {/* Progress Bar */}
-      <ProgressBar progressCount={progressCount} totalCount={totalCount} />
 
       {/* Chapter List */}
       {isLoadingChapters ? (
@@ -123,17 +146,16 @@ export default function TodayScreen({ navigation }: Props) {
         </View>
       )}
 
-      {/* Quiz Button or Completed Badge */}
       {alreadyAnswered ? (
         <View style={styles.completedBadge}>
-          <Text style={styles.completedText}>Quiz completado</Text>
+          <Text style={styles.completedText}>Preguntas completadas</Text>
         </View>
       ) : (
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate('Quiz', { dayId: day.id })}
         >
-          <Text style={styles.buttonText}>Comenzar Quiz</Text>
+          <Text style={styles.buttonText}>Comenzar preguntas</Text>
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -142,20 +164,7 @@ export default function TodayScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { padding: 24, paddingBottom: 48 },
-  dayMonth: { fontSize: 13, fontWeight: '600', color: Colors.primary, textTransform: 'uppercase', marginBottom: 4 },
-  date: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary, marginBottom: 20, textTransform: 'capitalize' },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  label: { fontSize: 12, fontWeight: '600', color: '#9ca3af', textTransform: 'uppercase', marginBottom: 6 },
-  chapters: { fontSize: 18, color: '#1f2937', fontWeight: '500' },
+  date: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary, marginBottom: 20, textTransform: 'capitalize' },
   chapterList: {
     marginBottom: 24,
   },

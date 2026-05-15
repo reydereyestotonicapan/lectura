@@ -6,17 +6,6 @@ export type AuthStackParamList = {
 
 export type TodayStackParamList = {
   Today: undefined;
-  Quiz: { dayId: number };
-  Results: {
-    dayId: number;
-    score: number;
-    total: number;
-    results: SubmitResult[];
-    questions: Question[];
-  };
-};
-
-export type ReadingsStackParamList = {
   ReadingsList: undefined;
   Quiz: { dayId: number };
   Results: {
@@ -28,10 +17,13 @@ export type ReadingsStackParamList = {
   };
 };
 
+export type AccountStackParamList = {
+  Profile: undefined;
+  Settings: undefined;
+};
+
 export type AppTabsParamList = {
   TodayTab: undefined;
-  ReadingsTab: undefined;
   History: undefined;
-  Settings: undefined;
-  Profile: undefined;
+  Account: undefined;
 };

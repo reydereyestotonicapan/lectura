@@ -55,12 +55,11 @@ class ReadingController extends Controller
 
     public function questions(Request $request, Day $day): JsonResponse
     {
-        $userId = $request->user()->id;
+        $userId = auth('sanctum')->user()?->id;
 
-        // Get question IDs already answered by this user for this day
-        $answeredQuestionIds = Response::where('user_id', $userId)
-            ->where('day_id', $day->id)
-            ->pluck('question_id');
+        $answeredQuestionIds = $userId
+            ? Response::where('user_id', $userId)->where('day_id', $day->id)->pluck('question_id')
+            : collect();
 
         $day->load(['questions' => function ($query) use ($answeredQuestionIds) {
             $query->whereNotIn('id', $answeredQuestionIds);
@@ -205,9 +204,12 @@ class ReadingController extends Controller
     {
         $user = $request->user();
 
-        $responses = Response::where('user_id', $user->id)
+        $responses = Response::where('responses.user_id', $user->id)
+            ->join('days', 'responses.day_id', '=', 'days.id')
+            ->select('responses.*')
             ->with(['day', 'question.correctAnswer', 'answer'])
-            ->orderByDesc('created_at')
+            ->orderByDesc('days.date_assigned')
+            ->orderByDesc('responses.created_at')
             ->paginate(20);
 
         return response()->json([

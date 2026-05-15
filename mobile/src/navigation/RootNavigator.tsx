@@ -3,9 +3,10 @@ import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../auth/AuthContext';
 import AuthStack from './AuthStack';
 import AppTabs from './AppTabs';
+import TodayStack from './TodayStack';
 
 export default function RootNavigator() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -15,5 +16,7 @@ export default function RootNavigator() {
     );
   }
 
-  return isAuthenticated ? <AppTabs /> : <AuthStack />;
+  if (isAuthenticated) return <AppTabs />;
+  if (isGuest) return <TodayStack />;
+  return <AuthStack />;
 }

@@ -32,5 +32,6 @@ export type AppTabsParamList = {
   TodayTab: undefined;
   ReadingsTab: undefined;
   History: undefined;
+  Settings: undefined;
   Profile: undefined;
 };

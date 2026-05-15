@@ -27,8 +27,11 @@ client.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await deleteToken();
-      onSignOut?.();
+      const token = await getToken();
+      if (token) {
+        await deleteToken();
+        onSignOut?.();
+      }
     }
     return Promise.reject(error);
   },

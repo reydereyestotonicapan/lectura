@@ -155,7 +155,7 @@ export default function TodayScreen({ navigation }: Props) {
           style={styles.button}
           onPress={() => navigation.navigate('Quiz', { dayId: day.id })}
         >
-          <Text style={styles.buttonText}>Comenzar preguntas</Text>
+          <Text style={styles.buttonText}>Responder preguntas</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

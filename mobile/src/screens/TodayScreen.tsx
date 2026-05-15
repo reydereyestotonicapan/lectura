@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
 import { Colors } from '../theme';
 import { getToday } from '../api/readings';
@@ -34,7 +35,13 @@ export default function TodayScreen({ navigation }: Props) {
   } = useChapterProgress(day?.id ?? null);
 
   // User settings hook for Bible source preference
-  const { settings } = useUserSettings();
+  const { settings, refreshSettings } = useUserSettings();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshSettings();
+    }, [refreshSettings])
+  );
 
   const load = useCallback(async () => {
     setIsLoading(true);

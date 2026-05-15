@@ -101,7 +101,7 @@ export default function LoginScreen() {
           <Text style={styles.heroIcon}>🕯️</Text>
           <Text style={styles.heroTitle}>Lámpara</Text>
           <Text style={styles.heroVerse}>
-            "Tu palabra es lámpara a mis pies{'\n'}y lumbrera a mi camino."
+            "Tu palabra es una lámpara{'\n'}que alumbra mi camino."
           </Text>
           <Text style={styles.heroRef}>— Salmo 119:105</Text>
         </View>

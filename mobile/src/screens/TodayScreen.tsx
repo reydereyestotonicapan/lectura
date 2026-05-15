@@ -35,7 +35,15 @@ export default function TodayScreen({ navigation }: Props) {
   const { isGuest, exitGuestMode } = useAuth();
 
   useLayoutEffect(() => {
-    if (!isGuest) {
+    if (isGuest) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={exitGuestMode} style={{ marginRight: 16 }}>
+            <Text style={{ color: Colors.primary, fontWeight: '600' }}>Iniciar sesión</Text>
+          </TouchableOpacity>
+        ),
+      });
+    } else {
       navigation.setOptions({
         headerRight: () => (
           <TouchableOpacity onPress={() => navigation.navigate('ReadingsList')} style={{ marginRight: 16 }}>
@@ -43,10 +51,8 @@ export default function TodayScreen({ navigation }: Props) {
           </TouchableOpacity>
         ),
       });
-    } else {
-      navigation.setOptions({ headerRight: undefined });
     }
-  }, [navigation, isGuest]);
+  }, [navigation, isGuest, exitGuestMode]);
 
   // User settings hook for Bible source preference
   const { settings, refreshSettings } = useUserSettings();

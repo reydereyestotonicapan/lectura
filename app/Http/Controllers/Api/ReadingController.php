@@ -205,9 +205,12 @@ class ReadingController extends Controller
     {
         $user = $request->user();
 
-        $responses = Response::where('user_id', $user->id)
+        $responses = Response::where('responses.user_id', $user->id)
+            ->join('days', 'responses.day_id', '=', 'days.id')
+            ->select('responses.*')
             ->with(['day', 'question.correctAnswer', 'answer'])
-            ->orderByDesc('created_at')
+            ->orderByDesc('days.date_assigned')
+            ->orderByDesc('responses.created_at')
             ->paginate(20);
 
         return response()->json([

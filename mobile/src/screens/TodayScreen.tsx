@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -33,6 +33,20 @@ export default function TodayScreen({ navigation }: Props) {
   } = useChapterProgress(day?.id ?? null);
 
   const { isGuest, exitGuestMode } = useAuth();
+
+  useLayoutEffect(() => {
+    if (!isGuest) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={() => navigation.navigate('ReadingsList')} style={{ marginRight: 16 }}>
+            <Text style={{ color: Colors.primary, fontWeight: '600' }}>Lecturas</Text>
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({ headerRight: undefined });
+    }
+  }, [navigation, isGuest]);
 
   // User settings hook for Bible source preference
   const { settings, refreshSettings } = useUserSettings();
@@ -126,17 +140,16 @@ export default function TodayScreen({ navigation }: Props) {
         </View>
       )}
 
-      {/* Quiz Button or Completed Badge */}
       {alreadyAnswered ? (
         <View style={styles.completedBadge}>
-          <Text style={styles.completedText}>Quiz completado</Text>
+          <Text style={styles.completedText}>Preguntas completadas</Text>
         </View>
       ) : (
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate('Quiz', { dayId: day.id })}
         >
-          <Text style={styles.buttonText}>Comenzar Quiz</Text>
+          <Text style={styles.buttonText}>Comenzar preguntas</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

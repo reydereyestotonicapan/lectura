@@ -82,7 +82,7 @@ export default function QuizScreen({ route, navigation }: Props) {
         questions,
       });
     } catch {
-      Alert.alert('Error', 'No se pudo enviar el quiz. Inténtalo de nuevo.');
+      Alert.alert('Error', 'No se pudieron enviar las respuestas. Inténtalo de nuevo.');
     } finally {
       setIsSubmitting(false);
     }

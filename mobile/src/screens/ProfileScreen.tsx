@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import client from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { Colors } from '../theme';
 import { ApiUser } from '../types/api';
+import { AccountStackParamList } from '../navigation/types';
 
-export default function ProfileScreen() {
+type Props = NativeStackScreenProps<AccountStackParamList, 'Profile'>;
+
+export default function ProfileScreen({ navigation }: Props) {
   const { signOut, user, setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(!user);
 
@@ -32,6 +36,10 @@ export default function ProfileScreen() {
       <Text style={styles.name}>{user?.name}</Text>
       <Text style={styles.email}>{user?.email}</Text>
 
+      <TouchableOpacity style={styles.settingsButton} onPress={() => navigation.navigate('Settings')}>
+        <Text style={styles.settingsButtonText}>Configuración</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={signOut}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -54,6 +62,15 @@ const styles = StyleSheet.create({
   avatarText: { color: '#fff', fontSize: 32, fontWeight: '700' },
   name: { fontSize: 20, fontWeight: '700', color: '#111827', marginBottom: 4 },
   email: { fontSize: 14, color: '#6b7280', marginBottom: 48 },
+  settingsButton: {
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  settingsButtonText: { color: Colors.primary, fontWeight: '600', fontSize: 15 },
   button: {
     borderWidth: 1.5,
     borderColor: '#ef4444',

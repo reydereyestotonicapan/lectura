@@ -2,30 +2,24 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AppTabsParamList } from './types';
 import TodayStack from './TodayStack';
-import ReadingsStack from './ReadingsStack';
+import AccountStack from './AccountStack';
 import HistoryScreen from '../screens/HistoryScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import { Colors } from '../theme';
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();
-
-const PRIMARY = Colors.primary;
 
 export default function AppTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PRIMARY,
+        tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: '#9ca3af',
       }}
     >
       <Tab.Screen name="TodayTab" component={TodayStack} options={{ title: 'Hoy' }} />
-      <Tab.Screen name="ReadingsTab" component={ReadingsStack} options={{ title: 'Lecturas' }} />
       <Tab.Screen name="History" component={HistoryScreen} options={{ title: 'Resultados' }} />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
+      <Tab.Screen name="Account" component={AccountStack} options={{ title: 'Cuenta' }} />
     </Tab.Navigator>
   );
 }

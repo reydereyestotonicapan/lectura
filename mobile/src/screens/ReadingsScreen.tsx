@@ -3,13 +3,13 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator }
 import { Colors } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { ReadingsStackParamList } from '../navigation/types';
+import { TodayStackParamList } from '../navigation/types';
 import { getReadings } from '../api/readings';
 import { Day } from '../types/api';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 
-type Props = NativeStackScreenProps<ReadingsStackParamList, 'ReadingsList'>;
+type Props = NativeStackScreenProps<TodayStackParamList, 'ReadingsList'>;
 
 function DayCard({ day, onPress }: { day: Day; onPress: () => void }) {
   const totalQuestions = day.questions?.length ?? day.questions_count ?? 0;

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -26,6 +27,7 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'password',
         'firebase_uid',
+        'settings',
     ];
 
     /**
@@ -66,8 +68,42 @@ class User extends Authenticatable implements FilamentUser
         // TODO: Implement canAccessPanel() method.
         return true;
     }
+
     public function responses(): HasMany
     {
         return $this->hasMany(Response::class);
+    }
+
+    /**
+     * Get the user's chapter progress records.
+     */
+    public function chapterProgress(): HasMany
+    {
+        return $this->hasMany(UserChapterProgress::class);
+    }
+
+    /**
+     * Get the user's settings.
+     *
+     * @return Attribute<array<string, mixed>, array<string, mixed>>
+     */
+    protected function settings(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value ? json_decode($value, true) : [],
+            set: fn (array $value) => json_encode($value),
+        );
+    }
+
+    /**
+     * Get the user's preferred Bible source.
+     *
+     * @return Attribute<string, never>
+     */
+    protected function bibleSource(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->settings['bible_source'] ?? 'youversion',
+        );
     }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import { Colors } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TodayStackParamList } from '../navigation/types';
@@ -9,11 +9,13 @@ import { Question } from '../types/api';
 import QuestionCard from '../components/QuestionCard';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import { useAuth } from '../auth/AuthContext';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'Quiz'>;
 
 export default function QuizScreen({ route, navigation }: Props) {
   const { dayId } = route.params;
+  const { isGuest, exitGuestMode } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +23,7 @@ export default function QuizScreen({ route, navigation }: Props) {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [comments, setComments] = useState<Record<number, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -51,6 +54,10 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
+    if (isGuest) {
+      setShowLoginModal(true);
+      return;
+    }
     setIsSubmitting(true);
     try {
       const answers = questions.map((q) => {
@@ -103,8 +110,9 @@ export default function QuizScreen({ route, navigation }: Props) {
   }
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <>
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <FlatList
@@ -138,6 +146,32 @@ export default function QuizScreen({ route, navigation }: Props) {
         }
       />
     </KeyboardAvoidingView>
+
+      {/* Guest login prompt */}
+      <Modal visible={showLoginModal} transparent animationType="fade" onRequestClose={() => setShowLoginModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalIcon}>🎉</Text>
+            <Text style={styles.modalTitle}>¡Ya casi terminas!</Text>
+            <Text style={styles.modalMessage}>
+              Crea tu cuenta para guardar tus respuestas, ver tu historial y ganar reconocimientos mensuales.
+            </Text>
+            <TouchableOpacity
+              style={styles.modalPrimaryButton}
+              onPress={() => { setShowLoginModal(false); exitGuestMode(); }}
+            >
+              <Text style={styles.modalPrimaryText}>Iniciar sesión</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalSecondaryButton}
+              onPress={() => setShowLoginModal(false)}
+            >
+              <Text style={styles.modalSecondaryText}>Seguir explorando</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -189,5 +223,59 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 16,
     fontWeight: '600',
+  },
+
+  // Guest login modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 32,
+    alignItems: 'center',
+  },
+  modalIcon: {
+    fontSize: 44,
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  modalPrimaryButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  modalPrimaryText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalSecondaryButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    width: '100%',
+  },
+  modalSecondaryText: {
+    color: Colors.textMuted,
+    fontSize: 15,
   },
 });

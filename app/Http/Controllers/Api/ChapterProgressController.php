@@ -35,8 +35,21 @@ class ChapterProgressController extends Controller
      */
     public function show(Day $day): JsonResponse
     {
-        $user = auth()->user();
-        $chapters = $day->getProgressForUser($user->id);
+        $user = auth('sanctum')->user();
+        $chapters = $user
+            ? $day->getProgressForUser($user->id)
+            : $day->dayChapters()->orderBy('order')->get()->map(fn ($chapter) => (object) [
+                'id'                   => $chapter->id,
+                'day_id'               => $chapter->day_id,
+                'book'                 => $chapter->book,
+                'chapter_number'       => $chapter->chapter_number,
+                'order'                => $chapter->order,
+                'display_name'         => $chapter->display_name,
+                'youversion_reference' => $chapter->youversion_reference,
+                'biblegateway_url'     => $chapter->biblegateway_url,
+                'is_read'              => false,
+                'read_at'              => null,
+            ]);
 
         $progressCount = $chapters->filter(fn ($chapter) => $chapter->is_read)->count();
         $totalChapters = $chapters->count();

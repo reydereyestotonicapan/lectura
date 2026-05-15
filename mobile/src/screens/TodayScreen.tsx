@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
@@ -13,6 +13,7 @@ import EmptyState from '../components/EmptyState';
 import ChapterListItem from '../components/ChapterListItem';
 import { useChapterProgress } from '../hooks/useChapterProgress';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { useAuth } from '../auth/AuthContext';
 import { openChapter } from '../services/deepLink';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'Today'>;
@@ -30,6 +31,8 @@ export default function TodayScreen({ navigation }: Props) {
     error: chapterError,
     toggleChapter,
   } = useChapterProgress(day?.id ?? null);
+
+  const { isGuest, exitGuestMode } = useAuth();
 
   // User settings hook for Bible source preference
   const { settings, refreshSettings } = useUserSettings();
@@ -70,9 +73,20 @@ export default function TodayScreen({ navigation }: Props) {
   // Handle toggling chapter read status
   const handleToggleChapter = useCallback(
     (chapterId: number) => {
+      if (isGuest) {
+        Alert.alert(
+          'Inicia sesión',
+          'Registra tu progreso de lectura creando una cuenta.',
+          [
+            { text: 'Ahora no', style: 'cancel' },
+            { text: 'Iniciar sesión', onPress: exitGuestMode },
+          ]
+        );
+        return;
+      }
       toggleChapter(chapterId);
     },
-    [toggleChapter]
+    [toggleChapter, isGuest, exitGuestMode]
   );
 
   if (isLoading) return <LoadingState />;

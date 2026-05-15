@@ -1,54 +1,54 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { useAuth } from '../auth/AuthContext';
 import { Colors } from '../theme';
 import { emailLogin, firebaseLogin } from '../api/auth';
 import { firebaseAuth } from '../firebase';
 
-// Lazy load Google Sign-In to avoid crashes in Expo Go
 let GoogleSignin: any = null;
 let statusCodes: any = {};
 
 const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '';
 
-// Only configure if running in a dev build (not Expo Go)
 try {
   const googleSignIn = require('@react-native-google-signin/google-signin');
   GoogleSignin = googleSignIn.GoogleSignin;
   statusCodes = googleSignIn.statusCodes;
   GoogleSignin.configure({ webClientId: WEB_CLIENT_ID });
 } catch (e) {
-  console.log('Google Sign-In not available (running in Expo Go)');
+  // Running in Expo Go
 }
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, enterGuestMode } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleEmailLogin = async () => {
-    // Step 1: Validate inputs (trim whitespace)
     if (!email.trim() || !password.trim()) {
       setError('Por favor ingresa tu correo y contraseña');
       return;
     }
-
-    // Step 2: Set loading state
     setIsLoading(true);
     setError(null);
-
     try {
-      // Step 3: Call API
       const { token, user } = await emailLogin({ email, password });
-
-      // Step 4: Store credentials and update auth state
       await signIn(token, user);
-      // Navigation happens automatically via AuthContext
     } catch (err: any) {
-      // Step 5: Handle errors
       if (err.response?.status === 401) {
         setError('Correo o contraseña incorrectos');
       } else if (err.response?.status === 422) {
@@ -63,32 +63,23 @@ export default function LoginScreen() {
 
   const handleGoogleSignIn = async () => {
     if (!GoogleSignin) {
-      Alert.alert(
-        'No disponible',
-        'Google Sign-In requiere un build de desarrollo. Usa SKIP_AUTH en AuthContext para pruebas.'
-      );
+      Alert.alert('No disponible', 'Google Sign-In requiere un build de desarrollo.');
       return;
     }
-
     setIsLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
       const idToken = response.data?.idToken;
-
       if (!idToken) throw new Error('No id_token received');
-
       const googleCredential = GoogleAuthProvider.credential(idToken);
       const userCredential = await signInWithCredential(firebaseAuth, googleCredential);
       const firebaseIdToken = await userCredential.user.getIdToken();
-
       const { token, user } = await firebaseLogin(firebaseIdToken);
       await signIn(token, user);
     } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled — do nothing
-      } else {
-          Alert.alert('Error', `Code: ${error.code}\n${error.message}`);
+      if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+        Alert.alert('Error', `Code: ${error.code}\n${error.message}`);
       }
     } finally {
       setIsLoading(false);
@@ -96,128 +87,264 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Lámpara</Text>
-      <Text style={styles.subtitle}>Lecturas bíblicas y quizzes diarios</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        placeholderTextColor={Colors.textMuted}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor={Colors.textMuted}
-        secureTextEntry={true}
-        autoCapitalize="none"
-        autoCorrect={false}
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleEmailLogin}
-        disabled={isLoading}
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
       >
-        {isLoading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Iniciar sesión</Text>
-        )}
-      </TouchableOpacity>
+        {/* Hero section */}
+        <View style={styles.hero}>
+          <Text style={styles.heroIcon}>🕯️</Text>
+          <Text style={styles.heroTitle}>Lámpara</Text>
+          <Text style={styles.heroVerse}>
+            "Tu palabra es lámpara a mis pies{'\n'}y lumbrera a mi camino."
+          </Text>
+          <Text style={styles.heroRef}>— Salmo 119:105</Text>
+        </View>
 
-      <View style={styles.dividerContainer}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>o</Text>
-        <View style={styles.dividerLine} />
-      </View>
+        {/* Form card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Inicia sesión</Text>
 
-      <TouchableOpacity
-        style={[styles.googleButton, isLoading && styles.buttonDisabled]}
-        onPress={handleGoogleSignIn}
-        disabled={isLoading}
-      >
-        <Text style={styles.googleButtonText}>Iniciar sesión con Google</Text>
-      </TouchableOpacity>
-    </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Correo electrónico"
+            placeholderTextColor={Colors.textMuted}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            placeholderTextColor={Colors.textMuted}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          {error && <Text style={styles.errorText}>{error}</Text>}
+
+          <TouchableOpacity
+            style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+            onPress={handleEmailLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Iniciar sesión</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>o</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.googleButton, isLoading && styles.buttonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Text style={styles.googleButtonText}>Continuar con Google</Text>
+          </TouchableOpacity>
+
+          {/* Guest separator */}
+          <View style={styles.guestSeparator}>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Guest option */}
+          <TouchableOpacity style={styles.guestButton} onPress={enterGuestMode}>
+            <View style={styles.guestButtonInner}>
+              <Text style={styles.guestIcon}>👁</Text>
+              <View>
+                <Text style={styles.guestButtonText}>Explorar como invitado</Text>
+                <Text style={styles.guestButtonSub}>
+                  Ve la lectura y preguntas de hoy · Sin cuenta
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.guestArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.primary,
   },
-  title: { fontSize: 28, fontWeight: '700', color: Colors.textPrimary, marginBottom: 8 },
-  subtitle: { fontSize: 15, color: Colors.textMuted, marginBottom: 48, textAlign: 'center' },
+  scroll: {
+    flexGrow: 1,
+  },
+
+  // Hero
+  hero: {
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    paddingTop: 72,
+    paddingBottom: 40,
+    paddingHorizontal: 32,
+  },
+  heroIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 16,
+    letterSpacing: 1,
+  },
+  heroVerse: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  heroRef: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+
+  // Card
+  card: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 32,
+    paddingTop: 28,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 24,
+  },
+
+  // Inputs
   input: {
     width: '100%',
     backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.textMuted,
+    borderColor: '#e5e7eb',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     color: Colors.textPrimary,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   errorText: {
     color: '#dc2626',
     fontSize: 14,
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
-  button: {
+
+  // Buttons
+  primaryButton: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
-    width: '100%',
     alignItems: 'center',
+    marginTop: 4,
   },
-  dividerContainer: {
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  // Divider
+  divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    marginVertical: 16,
+    marginVertical: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.textMuted,
+    backgroundColor: '#e5e7eb',
   },
   dividerText: {
     color: Colors.textMuted,
     paddingHorizontal: 16,
     fontSize: 14,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  // Google
   googleButton: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.textMuted,
-    paddingHorizontal: 32,
+    borderColor: '#e5e7eb',
     paddingVertical: 16,
     borderRadius: 12,
-    width: '100%',
     alignItems: 'center',
   },
-  googleButtonText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '600' },
+  googleButtonText: {
+    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Guest
+  guestSeparator: {
+    marginTop: 28,
+    marginBottom: 16,
+  },
+  guestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+  },
+  guestButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  guestIcon: {
+    fontSize: 22,
+  },
+  guestButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  guestButtonSub: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 2,
+  },
+  guestArrow: {
+    fontSize: 22,
+    color: Colors.primary,
+    fontWeight: '300',
+  },
 });

@@ -5,7 +5,7 @@ import AuthStack from './AuthStack';
 import AppTabs from './AppTabs';
 
 export default function RootNavigator() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -15,5 +15,5 @@ export default function RootNavigator() {
     );
   }
 
-  return isAuthenticated ? <AppTabs /> : <AuthStack />;
+  return (isAuthenticated || isGuest) ? <AppTabs /> : <AuthStack />;
 }

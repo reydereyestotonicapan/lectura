@@ -31,9 +31,12 @@ const DEV_USER: ApiUser = {
 interface AuthState {
   user: ApiUser | null;
   isAuthenticated: boolean;
+  isGuest: boolean;
   isLoading: boolean;
   signIn: (token: string, user: ApiUser) => Promise<void>;
   signOut: () => Promise<void>;
+  enterGuestMode: () => void;
+  exitGuestMode: () => void;
   setUser: (user: ApiUser) => void;
 }
 
@@ -42,10 +45,15 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<ApiUser | null>(null);
   const [hasToken, setHasToken] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const enterGuestMode = () => setIsGuest(true);
+  const exitGuestMode = () => setIsGuest(false);
 
   const signOut = async () => {
     if (SKIP_AUTH) return; // Prevent sign out in dev mode
+    setIsGuest(false);
     
     // Sign out from Google Sign-In (clears cached account)
     if (GoogleSignin) {
@@ -100,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: hasToken, isLoading, signIn, signOut, setUser }}
+      value={{ user, isAuthenticated: hasToken, isGuest, isLoading, signIn, signOut, enterGuestMode, exitGuestMode, setUser }}
     >
       {children}
     </AuthContext.Provider>

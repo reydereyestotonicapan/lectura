@@ -47,6 +47,7 @@ class ChapterProgressController extends Controller
                 'display_name'         => $chapter->display_name,
                 'youversion_reference' => $chapter->youversion_reference,
                 'biblegateway_url'     => $chapter->biblegateway_url,
+                'youtube_link'         => $chapter->youtube_link,
                 'is_read'              => false,
                 'read_at'              => null,
             ]);

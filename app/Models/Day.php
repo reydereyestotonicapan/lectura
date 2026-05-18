@@ -59,6 +59,7 @@ class Day extends Model
                     'display_name' => $chapter->display_name,
                     'youversion_reference' => $chapter->youversion_reference,
                     'biblegateway_url' => $chapter->biblegateway_url,
+                    'youtube_link' => $chapter->youtube_link,
                     'is_read' => $progress !== null,
                     'read_at' => $progress?->read_at,
                 ];

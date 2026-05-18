@@ -65,12 +65,7 @@ class DayChapterObserver
      */
     protected function syncChaptersString(DayChapter $dayChapter): void
     {
-        $day = $dayChapter->day;
-
-        // If the day relationship is not loaded (e.g., during delete), try to load it
-        if (! $day) {
-            $day = Day::find($dayChapter->day_id);
-        }
+        $day = Day::find($dayChapter->day_id);
 
         if (! $day) {
             return;

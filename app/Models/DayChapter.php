@@ -100,6 +100,7 @@ class DayChapter extends Model
         'book',
         'chapter_number',
         'order',
+        'youtube_link',
     ];
 
     /**

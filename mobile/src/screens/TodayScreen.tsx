@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
@@ -82,12 +82,28 @@ export default function TodayScreen({ navigation }: Props) {
     load();
   }, [load]);
 
-  // Handle opening a chapter in external Bible source
+  // Handle opening a chapter in external Bible source, auto-marking as read
   const handleReadChapter = useCallback(
     async (chapter: ChapterWithProgress) => {
       await openChapter(chapter.book, chapter.chapter_number, settings.bible_source);
+      if (!chapter.is_read && !isGuest) {
+        toggleChapter(chapter.id);
+      }
     },
-    [settings.bible_source]
+    [settings.bible_source, toggleChapter, isGuest]
+  );
+
+  // Handle opening YouTube link, auto-marking as read
+  const handleWatchChapter = useCallback(
+    (chapter: ChapterWithProgress) => {
+      if (chapter.youtube_link) {
+        Linking.openURL(chapter.youtube_link);
+      }
+      if (!chapter.is_read && !isGuest) {
+        toggleChapter(chapter.id);
+      }
+    },
+    [toggleChapter, isGuest]
   );
 
   // Handle toggling chapter read status
@@ -141,6 +157,7 @@ export default function TodayScreen({ navigation }: Props) {
               chapter={chapter}
               onToggle={handleToggleChapter}
               onRead={handleReadChapter}
+              onWatch={handleWatchChapter}
             />
           ))}
         </View>
@@ -155,7 +172,7 @@ export default function TodayScreen({ navigation }: Props) {
           style={styles.button}
           onPress={() => navigation.navigate('Quiz', { dayId: day.id })}
         >
-          <Text style={styles.buttonText}>Comenzar preguntas</Text>
+          <Text style={styles.buttonText}>Responder preguntas</Text>
         </TouchableOpacity>
       )}
     </ScrollView>

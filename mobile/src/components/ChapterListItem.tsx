@@ -7,6 +7,7 @@ interface ChapterListItemProps {
   chapter: ChapterWithProgress;
   onToggle: (chapterId: number) => void;
   onRead: (chapter: ChapterWithProgress) => void;
+  onWatch?: (chapter: ChapterWithProgress) => void;
   isUpdating?: boolean;
 }
 
@@ -14,6 +15,7 @@ export default function ChapterListItem({
   chapter,
   onToggle,
   onRead,
+  onWatch,
   isUpdating = false,
 }: ChapterListItemProps) {
   const handleToggle = () => {
@@ -24,6 +26,12 @@ export default function ChapterListItem({
 
   const handleRead = () => {
     onRead(chapter);
+  };
+
+  const handleWatch = () => {
+    if (chapter.youtube_link && onWatch) {
+      onWatch(chapter);
+    }
   };
 
   return (
@@ -55,15 +63,27 @@ export default function ChapterListItem({
         </Text>
       </View>
 
-      {/* "Leer" button on the right */}
-      <TouchableOpacity
-        style={styles.readButton}
-        onPress={handleRead}
-        accessibilityRole="button"
-        accessibilityLabel={`Leer ${chapter.display_name}`}
-      >
-        <Text style={styles.readButtonText}>Leer</Text>
-      </TouchableOpacity>
+      {/* Buttons on the right */}
+      <View style={styles.actions}>
+        {chapter.youtube_link ? (
+          <TouchableOpacity
+            style={styles.watchButton}
+            onPress={handleWatch}
+            accessibilityRole="button"
+            accessibilityLabel={`Escuchar ${chapter.display_name} en YouTube`}
+          >
+            <Text style={styles.watchButtonText}>▶</Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity
+          style={styles.readButton}
+          onPress={handleRead}
+          accessibilityRole="button"
+          accessibilityLabel={`Leer ${chapter.display_name}`}
+        >
+          <Text style={styles.readButtonText}>Leer</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -119,6 +139,24 @@ const styles = StyleSheet.create({
   },
   chapterNameRead: {
     color: Colors.textMuted,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  watchButton: {
+    backgroundColor: '#fff0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ff0000',
+  },
+  watchButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ff0000',
   },
   readButton: {
     backgroundColor: Colors.primaryLight,

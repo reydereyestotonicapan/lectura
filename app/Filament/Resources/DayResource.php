@@ -66,6 +66,11 @@ class DayResource extends Resource
                             ->numeric()
                             ->required()
                             ->minValue(1),
+                        Forms\Components\TextInput::make('youtube_link')
+                            ->label('Enlace de YouTube')
+                            ->url()
+                            ->placeholder('https://www.youtube.com/watch?v=...')
+                            ->columnSpanFull(),
                     ])
                     ->orderColumn('order')
                     ->defaultItems(1)

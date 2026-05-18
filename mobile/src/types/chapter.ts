@@ -87,6 +87,7 @@ export interface DayChapter {
   display_name: string;
   youversion_reference: string;
   biblegateway_url: string;
+  youtube_link: string | null;
 }
 
 /**

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors } from '../theme';
 import { ChapterWithProgress } from '../types/chapter';
 
@@ -7,6 +7,7 @@ interface ChapterListItemProps {
   chapter: ChapterWithProgress;
   onToggle: (chapterId: number) => void;
   onRead: (chapter: ChapterWithProgress) => void;
+  onWatch?: (chapter: ChapterWithProgress) => void;
   isUpdating?: boolean;
 }
 
@@ -14,6 +15,7 @@ export default function ChapterListItem({
   chapter,
   onToggle,
   onRead,
+  onWatch,
   isUpdating = false,
 }: ChapterListItemProps) {
   const handleToggle = () => {
@@ -27,8 +29,8 @@ export default function ChapterListItem({
   };
 
   const handleWatch = () => {
-    if (chapter.youtube_link) {
-      Linking.openURL(chapter.youtube_link);
+    if (chapter.youtube_link && onWatch) {
+      onWatch(chapter);
     }
   };
 

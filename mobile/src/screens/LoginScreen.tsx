@@ -98,12 +98,12 @@ export default function LoginScreen() {
       >
         {/* Hero section */}
         <View style={styles.hero}>
-          <Text style={styles.heroIcon}>🕯️</Text>
-          <Text style={styles.heroTitle}>Lámpara</Text>
+          <Text style={styles.heroIcon}>🍇</Text>
+          <Text style={styles.heroTitle}>gRafé</Text>
           <Text style={styles.heroVerse}>
-            "Tu palabra es una lámpara{'\n'}que alumbra mi camino."
+            "Yo soy la vid, ustedes{'\n'}son las ramas."
           </Text>
-          <Text style={styles.heroRef}>— Salmo 119:105</Text>
+          <Text style={styles.heroRef}>— Juan 15:5</Text>
         </View>
 
         {/* Form card */}

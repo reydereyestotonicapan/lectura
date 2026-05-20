@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:860937846633:android:37f778bfbaeea5b0a3c7f8",
+        "mobilesdk_app_id": "1:860937846633:android:1e30bc3042edf59da3c7f8",
         "android_client_info": {
-          "package_name": "org.reydereyestotonicapan.lampara"
+          "package_name": "org.reydereyestotonicapan.grafe"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "860937846633-a1722rqjsd3259luaipesq3iq8tf3lbv.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "org.reydereyestotonicapan.lampara",
-            "certificate_hash": "01858af1f68d6d22b225ad6e4d914a1b1fe59439"
-          }
-        },
         {
           "client_id": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com",
           "client_type": 3

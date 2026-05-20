@@ -101,9 +101,9 @@ export default function LoginScreen() {
           <Text style={styles.heroIcon}>🍇</Text>
           <Text style={styles.heroTitle}>gRafé</Text>
           <Text style={styles.heroVerse}>
-            "Yo soy la vid, ustedes{'\n'}son las ramas."
+            "Todo lo que está escrito en la Biblia{'\n'}es el mensaje de Dios, y es útil para{'\n'}enseñar a la gente, para ayudarla{'\n'}y corregirla, y para mostrarle{'\n'}cómo debe vivir."
           </Text>
-          <Text style={styles.heroRef}>— Juan 15:5</Text>
+          <Text style={styles.heroRef}>— 2 Timoteo 3:16 TLA</Text>
         </View>
 
         {/* Form card */}

@@ -43,3 +43,7 @@ credentials.json
 # generated native folders
 /ios
 /android
+
+# Keystore properties (contains passwords)
+android/keystore.properties
+keystore.properties

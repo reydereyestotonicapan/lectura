@@ -34,9 +34,16 @@ yarn-error.*
 .env
 .env*.local
 
+# EAS credentials
+credentials.json
+
 # typescript
 *.tsbuildinfo
 
 # generated native folders
 /ios
 /android
+
+# Keystore properties (contains passwords)
+android/keystore.properties
+keystore.properties

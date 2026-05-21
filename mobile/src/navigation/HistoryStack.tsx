@@ -1,13 +1,15 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { AccountStackParamList } from './types';
-import ProfileScreen from '../screens/ProfileScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import { useTheme } from '../theme';
 
-const Stack = createStackNavigator<AccountStackParamList>();
+export type HistoryStackParamList = {
+  HistoryList: undefined;
+};
 
-export default function AccountStack() {
+const Stack = createStackNavigator<HistoryStackParamList>();
+
+export default function HistoryStack() {
   const { colors } = useTheme();
 
   return (
@@ -20,8 +22,7 @@ export default function AccountStack() {
         headerTintColor: colors.primary,
       }}
     >
-      <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
-      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Configuración' }} />
+      <Stack.Screen name="HistoryList" component={HistoryScreen} options={{ title: 'Resultados' }} />
     </Stack.Navigator>
   );
 }

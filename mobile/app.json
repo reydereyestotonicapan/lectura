@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Lámpara",
-    "slug": "lampara",
-    "scheme": "lampara",
+    "name": "gRafé",
+    "slug": "grafe",
+    "scheme": "grafe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,18 +11,20 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#895301"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "org.reydereyestotonicapan.grafe"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#895301"
       },
-      "package": "org.reydereyestotonicapan.lampara",
-      "googleServicesFile": "./google-services.json"
+      "package": "org.reydereyestotonicapan.grafe",
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,8 +37,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "28e73210-d008-4918-a6a1-75d18790dd52"
+        "projectId": "a3ab3453-1601-4a14-b24e-9c39326368c0"
       }
-    }
+    },
+    "owner": "reydereyestotonicapan"
   }
 }

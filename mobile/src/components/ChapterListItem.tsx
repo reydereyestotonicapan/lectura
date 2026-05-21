@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { Colors } from '../theme';
+import React, { useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { useTheme, Radii, createShadows } from '../theme';
 import { ChapterWithProgress } from '../types/chapter';
 
-interface ChapterListItemProps {
+interface Props {
   chapter: ChapterWithProgress;
   onToggle: (chapterId: number) => void;
   onRead: (chapter: ChapterWithProgress) => void;
@@ -11,164 +11,160 @@ interface ChapterListItemProps {
   isUpdating?: boolean;
 }
 
-export default function ChapterListItem({
-  chapter,
-  onToggle,
-  onRead,
-  onWatch,
-  isUpdating = false,
-}: ChapterListItemProps) {
-  const handleToggle = () => {
-    if (!isUpdating) {
-      onToggle(chapter.id);
-    }
-  };
+export default function ChapterListItem({ chapter, onToggle, onRead, onWatch, isUpdating = false }: Props) {
+  const { colors, isDark } = useTheme();
+  const shadows = createShadows(isDark);
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const handleRead = () => {
-    onRead(chapter);
-  };
-
-  const handleWatch = () => {
-    if (chapter.youtube_link && onWatch) {
-      onWatch(chapter);
-    }
-  };
+  const pressIn = () =>
+    Animated.spring(scale, { toValue: 0.985, useNativeDriver: true, speed: 60, bounciness: 0 }).start();
+  const pressOut = () =>
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 60, bounciness: 3 }).start();
 
   return (
-    <View style={styles.container}>
-      {/* Checkbox on the left */}
+    <Animated.View style={[
+      styles.card, 
+      { backgroundColor: colors.surface, borderColor: colors.border },
+      chapter.is_read && { backgroundColor: colors.surfaceWarm, borderColor: colors.goldLight },
+      shadows.sm,
+      { transform: [{ scale }] }
+    ]}>
+      {/* Checkbox */}
       <TouchableOpacity
-        style={styles.checkboxContainer}
-        onPress={handleToggle}
+        style={styles.checkWrap}
+        onPress={() => !isUpdating && onToggle(chapter.id)}
         disabled={isUpdating}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: chapter.is_read }}
         accessibilityLabel={`Marcar ${chapter.display_name} como ${chapter.is_read ? 'no leído' : 'leído'}`}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
         {isUpdating ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
+          <ActivityIndicator size="small" color={colors.gold} />
         ) : chapter.is_read ? (
-          <View style={styles.checkboxChecked}>
-            <Text style={styles.checkmark}>✓</Text>
+          <View style={[styles.checkOn, { backgroundColor: colors.gold }, shadows.xs]}>
+            <Text style={styles.checkMark}>✓</Text>
           </View>
         ) : (
-          <View style={styles.checkboxUnchecked} />
+          <View style={[styles.checkOff, { borderColor: colors.borderMed, backgroundColor: colors.background }]} />
         )}
       </TouchableOpacity>
 
-      {/* Chapter name in the middle */}
-      <View style={styles.chapterInfo}>
-        <Text style={[styles.chapterName, chapter.is_read && styles.chapterNameRead]}>
+      {/* Chapter name */}
+      <TouchableOpacity
+        style={styles.nameWrap}
+        onPress={() => onRead(chapter)}
+        onPressIn={pressIn}
+        onPressOut={pressOut}
+        activeOpacity={1}
+      >
+        <Text 
+          style={[
+            styles.name, 
+            { color: colors.textPrimary },
+            chapter.is_read && { color: colors.textMuted }
+          ]} 
+          numberOfLines={1}
+        >
           {chapter.display_name}
         </Text>
-      </View>
+      </TouchableOpacity>
 
-      {/* Buttons on the right */}
+      {/* Action buttons */}
       <View style={styles.actions}>
-        {chapter.youtube_link ? (
+        {chapter.youtube_link && onWatch ? (
           <TouchableOpacity
-            style={styles.watchButton}
-            onPress={handleWatch}
-            accessibilityRole="button"
-            accessibilityLabel={`Escuchar ${chapter.display_name} en YouTube`}
+            style={styles.btnWatch}
+            onPress={() => onWatch(chapter)}
+            accessibilityLabel={`Escuchar ${chapter.display_name}`}
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
           >
-            <Text style={styles.watchButtonText}>▶</Text>
+            <Text style={styles.btnWatchText}>▶</Text>
           </TouchableOpacity>
         ) : null}
         <TouchableOpacity
-          style={styles.readButton}
-          onPress={handleRead}
-          accessibilityRole="button"
+          style={[styles.btnRead, { backgroundColor: colors.goldFaint, borderColor: colors.goldLight }]}
+          onPress={() => onRead(chapter)}
           accessibilityLabel={`Leer ${chapter.display_name}`}
+          hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
         >
-          <Text style={styles.readButtonText}>Leer</Text>
+          <Text style={[styles.btnReadText, { color: colors.primary }]}>Leer</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: Radii.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderWidth: 1,
   },
-  checkboxContainer: {
-    width: 32,
-    height: 32,
+  checkWrap: {
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxUnchecked: {
+  checkOff: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
-    backgroundColor: '#f9fafb',
   },
-  checkboxChecked: {
+  checkOn: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkmark: {
+  checkMark: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 13,
+    fontWeight: '800',
   },
-  chapterInfo: {
+  nameWrap: {
     flex: 1,
-    marginHorizontal: 12,
+    marginHorizontal: 10,
   },
-  chapterName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.textPrimary,
-  },
-  chapterNameRead: {
-    color: Colors.textMuted,
+  name: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  watchButton: {
-    backgroundColor: '#fff0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+  btnWatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#FFF0F0',
     borderWidth: 1,
-    borderColor: '#ff0000',
+    borderColor: '#FFCCCC',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  watchButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ff0000',
+  btnWatchText: {
+    fontSize: 13,
+    color: '#CC3333',
+    fontWeight: '700',
   },
-  readButton: {
-    backgroundColor: Colors.primaryLight,
-    paddingHorizontal: 16,
+  btnRead: {
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: Radii.md,
     borderWidth: 1,
-    borderColor: Colors.primary,
   },
-  readButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.primary,
+  btnReadText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

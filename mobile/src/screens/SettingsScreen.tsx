@@ -1,216 +1,252 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { Colors } from '../theme';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useTheme, Radii, Spacing, createShadows, ThemeMode } from '../theme';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { BibleSource } from '../types/chapter';
+import LoadingState from '../components/LoadingState';
+import SectionHeader from '../components/ui/SectionHeader';
 
 interface BibleSourceOption {
   value: BibleSource;
   label: string;
   description: string;
+  icon: string;
 }
 
-const BIBLE_SOURCE_OPTIONS: BibleSourceOption[] = [
+const BIBLE_SOURCES: BibleSourceOption[] = [
   {
     value: 'youversion',
-    label: 'YouVersion (App)',
-    description: 'Abre los capítulos en la aplicación YouVersion',
+    label: 'YouVersion',
+    description: 'Abre los capítulos en la app YouVersion',
+    icon: '📱',
   },
   {
     value: 'biblegateway',
-    label: 'BibleGateway (Web)',
+    label: 'BibleGateway',
     description: 'Abre los capítulos en el navegador web',
+    icon: '🌐',
   },
 ];
 
-/**
- * Settings screen for user preferences
- * 
- * Allows users to configure their Bible reading source preference.
- * 
- * Validates: Requirements 5.1, 5.2
- */
+interface ThemeOption {
+  value: ThemeMode;
+  label: string;
+  icon: string;
+}
+
+const THEME_OPTIONS: ThemeOption[] = [
+  { value: 'light', label: 'Claro', icon: '☀️' },
+  { value: 'dark', label: 'Oscuro', icon: '🌙' },
+  { value: 'system', label: 'Sistema', icon: '⚙️' },
+];
+
 export default function SettingsScreen() {
+  const { colors, isDark, mode: themeMode, setMode: setThemeMode } = useTheme();
+  const shadows = createShadows(isDark);
   const { settings, isLoading, error, updateBibleSource } = useUserSettings();
 
-  const handleSourceChange = async (source: BibleSource) => {
-    if (source === settings.bible_source) return;
-    
-    try {
-      await updateBibleSource(source);
-    } catch {
-      // Error is handled by the hook and displayed via the error state
-    }
-  };
+  if (isLoading) return <LoadingState />;
 
-  if (isLoading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
+  const styles = createStyles(colors, shadows);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Configuración</Text>
+    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Theme Selector */}
+      <SectionHeader title="Apariencia" subtitle="Elige el tema de la app" style={styles.section} />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Fuente de lectura</Text>
-        <Text style={styles.sectionDescription}>
-          Selecciona dónde prefieres leer los capítulos de la Biblia
-        </Text>
-
-        {error && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
-
-        <View style={styles.optionsContainer}>
-          {BIBLE_SOURCE_OPTIONS.map((option) => (
+      <View style={styles.themeRow}>
+        {THEME_OPTIONS.map((opt) => {
+          const selected = themeMode === opt.value;
+          return (
             <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionCard,
-                settings.bible_source === option.value && styles.optionCardSelected,
-              ]}
-              onPress={() => handleSourceChange(option.value)}
-              activeOpacity={0.7}
+              key={opt.value}
+              style={[styles.themeOption, selected && styles.themeOptionSelected]}
+              onPress={() => setThemeMode(opt.value)}
+              activeOpacity={0.8}
             >
-              <View style={styles.radioContainer}>
-                <View
-                  style={[
-                    styles.radioOuter,
-                    settings.bible_source === option.value && styles.radioOuterSelected,
-                  ]}
-                >
-                  {settings.bible_source === option.value && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
-                <View style={styles.optionTextContainer}>
-                  <Text
-                    style={[
-                      styles.optionLabel,
-                      settings.bible_source === option.value && styles.optionLabelSelected,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                  <Text style={styles.optionDescription}>{option.description}</Text>
-                </View>
+              <Text style={styles.themeIcon}>{opt.icon}</Text>
+              <Text style={[styles.themeLabel, selected && styles.themeLabelSelected]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Bible Source Selector */}
+      <SectionHeader title="Fuente de lectura" subtitle="¿Dónde prefieres leer la Biblia?" style={styles.section} />
+
+      {error ? (
+        <View style={styles.errorBadge}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      <View style={styles.optionsWrap}>
+        {BIBLE_SOURCES.map((opt) => {
+          const selected = settings.bible_source === opt.value;
+          return (
+            <TouchableOpacity
+              key={opt.value}
+              style={[styles.option, selected && styles.optionSelected]}
+              onPress={() => opt.value !== settings.bible_source && updateBibleSource(opt.value)}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
+                <Text style={styles.optionEmoji}>{opt.icon}</Text>
+              </View>
+              <View style={styles.optionBody}>
+                <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                  {opt.label}
+                </Text>
+                <Text style={styles.optionDesc}>{opt.description}</Text>
+              </View>
+              <View style={[styles.radio, selected && styles.radioSelected]}>
+                {selected && <View style={styles.radioDot} />}
               </View>
             </TouchableOpacity>
-          ))}
-        </View>
+          );
+        })}
       </View>
-    </View>
+
+      <View style={styles.tipsCard}>
+        <Text style={styles.tipsTitle}>💡 Sugerencia</Text>
+        <Text style={styles.tipsText}>
+          Si tienes la app de YouVersion instalada, te recomendamos usarla para una mejor experiencia de lectura.
+        </Text>
+      </View>
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    padding: 24,
-    paddingTop: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 32,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    marginBottom: 16,
-  },
-  errorContainer: {
-    backgroundColor: '#fef2f2',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 14,
-  },
-  optionsContainer: {
-    gap: 12,
-  },
-  optionCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  optionCardSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  radioContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: Colors.textMuted,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  radioOuterSelected: {
-    borderColor: Colors.primary,
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.primary,
-  },
-  optionTextContainer: {
-    flex: 1,
-  },
-  optionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  optionLabelSelected: {
-    color: Colors.primary,
-  },
-  optionDescription: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    lineHeight: 18,
-  },
-});
+const createStyles = (colors: ReturnType<typeof useTheme>['colors'], shadows: ReturnType<typeof createShadows>) =>
+  StyleSheet.create({
+    root: { flex: 1, backgroundColor: colors.background },
+    content: { padding: Spacing.base, paddingTop: Spacing.xl, paddingBottom: 48 },
+
+    section: { marginBottom: 20, marginTop: 8 },
+
+    // Theme selector
+    themeRow: {
+      flexDirection: 'row',
+      gap: 10,
+      marginBottom: 32,
+    },
+    themeOption: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      backgroundColor: colors.surface,
+      borderRadius: Radii.xl,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      ...shadows.xs,
+    },
+    themeOptionSelected: {
+      borderColor: colors.gold,
+      backgroundColor: colors.goldFaint,
+      ...shadows.sm,
+    },
+    themeIcon: {
+      fontSize: 24,
+      marginBottom: 8,
+    },
+    themeLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    themeLabelSelected: {
+      color: colors.primary,
+    },
+
+    // Error
+    errorBadge: {
+      backgroundColor: colors.errorBg,
+      borderRadius: Radii.md,
+      padding: 12,
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.errorBorder,
+    },
+    errorText: { color: colors.error, fontSize: 14 },
+
+    // Bible source options
+    optionsWrap: { gap: 10, marginBottom: 24 },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: Radii.xl,
+      padding: 16,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      gap: 14,
+      ...shadows.xs,
+    },
+    optionSelected: {
+      borderColor: colors.gold,
+      backgroundColor: colors.goldFaint,
+      ...shadows.sm,
+    },
+    optionIcon: {
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    optionIconSelected: { backgroundColor: colors.goldLight },
+    optionEmoji: { fontSize: 22 },
+    optionBody: { flex: 1 },
+    optionLabel: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      marginBottom: 3,
+    },
+    optionLabelSelected: { color: colors.primary },
+    optionDesc: {
+      fontSize: 13,
+      color: colors.textMuted,
+      lineHeight: 18,
+    },
+    radio: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: colors.borderMed,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    radioSelected: { borderColor: colors.gold },
+    radioDot: {
+      width: 11,
+      height: 11,
+      borderRadius: 6,
+      backgroundColor: colors.gold,
+    },
+
+    // Tips
+    tipsCard: {
+      backgroundColor: colors.goldFaint,
+      borderRadius: Radii.xl,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.goldLight,
+    },
+    tipsTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.primary,
+      marginBottom: 6,
+    },
+    tipsText: {
+      fontSize: 13,
+      color: colors.textMuted,
+      lineHeight: 20,
+    },
+  });

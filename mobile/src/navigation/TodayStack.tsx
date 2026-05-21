@@ -5,18 +5,21 @@ import TodayScreen from '../screens/TodayScreen';
 import ReadingsScreen from '../screens/ReadingsScreen';
 import QuizScreen from '../screens/QuizScreen';
 import ResultsScreen from '../screens/ResultsScreen';
-import { Colors } from '../theme';
+import { useTheme } from '../theme';
 
 const Stack = createStackNavigator<TodayStackParamList>();
 
 export default function TodayStack() {
+  const { colors } = useTheme();
+
   return (
     <Stack.Navigator
       screenOptions={{
         headerTitleAlign: 'left',
-        headerTitleStyle: { fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
-        headerStyle: { backgroundColor: Colors.background },
+        headerTitleStyle: { fontSize: 18, fontWeight: '600', color: colors.textPrimary },
+        headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,
+        headerTintColor: colors.primary,
       }}
     >
       <Stack.Screen name="Today" component={TodayScreen} options={{ title: 'Lectura de hoy' }} />

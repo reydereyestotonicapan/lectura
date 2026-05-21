@@ -105,6 +105,35 @@ class SyncProdToStage extends Command
         $this->newLine();
         $this->info("Done. Total new records inserted: {$totalInserted}");
 
+        $this->resetSequences($stage);
+
         return self::SUCCESS;
+    }
+
+    private function resetSequences(\Illuminate\Database\Connection $stage): void
+    {
+        $this->info('Resetting sequences...');
+
+        foreach ($this->tables as $table) {
+            try {
+                $sequence = $stage->selectOne(
+                    "SELECT pg_get_serial_sequence(?, 'id') AS seq",
+                    [$table]
+                );
+
+                if (! $sequence?->seq) {
+                    continue;
+                }
+
+                $stage->statement(
+                    "SELECT setval(?, COALESCE((SELECT MAX(id) FROM \"{$table}\"), 1))",
+                    [$sequence->seq]
+                );
+
+                $this->line("  → {$table} sequence reset.");
+            } catch (\Throwable) {
+                // Table has no id sequence (pivot tables), skip silently
+            }
+        }
     }
 }

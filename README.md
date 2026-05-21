@@ -126,3 +126,274 @@ This copies only new records from prod to stage — it never overwrites or delet
 
 ## License
 [MIT](LICENSE) `
+
+---
+
+## Firebase Setup (Mobile API)
+
+### 1. Download the service account JSON
+
+Go to **Firebase Console → Project Settings → Service accounts → Generate new private key** and download the JSON file.
+
+Place it at:
+
+```
+storage/app/firebase/service-account.json
+```
+
+### 2. Configure environment variables
+
+In your `.env` file:
+
+```env
+FIREBASE_CREDENTIALS=storage/app/firebase/service-account.json
+FIREBASE_PROJECT_ID=your-firebase-project-id
+```
+
+### 3. Enable Email/Password sign-in (for local testing only)
+
+In Firebase Console → **Authentication → Sign-in method → Email/Password** → enable it.
+
+Then create a test user under **Authentication → Users → Add user**.
+
+---
+
+## API Testing
+
+### Get a Firebase ID token (test only)
+
+```bash
+curl -X POST "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=YOUR_FIREBASE_WEB_API_KEY" -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"yourpassword","returnSecureToken":true}'
+```
+
+Copy the `idToken` from the response.
+
+> Your **Web API Key** can be found in Firebase Console → Project Settings → General → Your apps → Firebase SDK snippet (`apiKey` field).
+
+### Authenticate against the API
+
+```bash
+curl -X POST http://localhost:8000/api/auth/firebase-login \
+  -H "Content-Type: application/json" \
+  -d '{"firebase_token":"PASTE_ID_TOKEN_HERE"}'
+```
+
+A successful response returns a Sanctum token:
+
+```json
+{
+  "token": "sanctum-token-here",
+  "user": { "id": 1, "name": "...", "email": "..." }
+}
+```
+
+### Get a Sanctum token for an existing user (bypass Firebase)
+
+Useful for quickly testing protected endpoints without going through Firebase.
+
+```bash
+docker compose exec app php artisan tinker
+```
+
+```php
+$user = \App\Models\User::first(); // or ->find(id)
+echo $user->createToken('test')->plainTextToken;
+```
+
+### Call a protected endpoint
+
+```bash
+curl http://localhost:8000/api/hello \
+  -H "Authorization: Bearer YOUR_SANCTUM_TOKEN"
+```
+
+### Available API endpoints
+
+All endpoints below require a valid `Authorization: Bearer` token.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/firebase-login` | Exchange Firebase ID token for Sanctum token |
+| `GET` | `/api/readings/today` | Get today's reading |
+| `GET` | `/api/readings` | Get paginated list of readings |
+| `GET` | `/api/readings/{id}` | Get a specific reading with questions and answers |
+| `GET` | `/api/readings/{id}/questions` | Get questions for a reading |
+| `POST` | `/api/readings/{id}/answers` | Submit quiz answers |
+| `GET` | `/api/readings/{day}/chapters` | Get chapters with progress for a day |
+| `POST` | `/api/chapters/{chapter}/progress` | Mark a chapter as read |
+| `DELETE` | `/api/chapters/{chapter}/progress` | Mark a chapter as unread |
+| `GET` | `/api/settings` | Get user settings |
+| `PUT` | `/api/settings` | Update user settings |
+| `GET` | `/api/profile` | Get authenticated user's profile |
+
+---
+
+## Chapter Progress API
+
+The Chapter Progress API allows users to track their Bible reading progress at the chapter level.
+
+### Get chapters with progress
+
+```bash
+GET /api/readings/{day}/chapters
+```
+
+Returns all chapters for a day with the authenticated user's reading progress.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "id": 1,
+    "date_assigned": "2025-01-15",
+    "chapters": "Romanos 8-10",
+    "day_chapters": [
+      {
+        "id": 1,
+        "day_id": 1,
+        "book": "Romanos",
+        "chapter_number": 8,
+        "order": 0,
+        "display_name": "Romanos 8",
+        "youversion_url": "youversion://bible?reference=ROM.8&version=176",
+        "biblegateway_url": "https://www.biblegateway.com/passage/?search=Romanos%208&version=TLA",
+        "is_read": true,
+        "read_at": "2025-01-15T10:30:00+00:00"
+      },
+      {
+        "id": 2,
+        "day_id": 1,
+        "book": "Romanos",
+        "chapter_number": 9,
+        "order": 1,
+        "display_name": "Romanos 9",
+        "youversion_url": "youversion://bible?reference=ROM.9&version=176",
+        "biblegateway_url": "https://www.biblegateway.com/passage/?search=Romanos%209&version=TLA",
+        "is_read": false,
+        "read_at": null
+      }
+    ],
+    "progress_count": 1,
+    "total_chapters": 2
+  }
+}
+```
+
+### Mark chapter as read
+
+```bash
+POST /api/chapters/{chapter}/progress
+```
+
+Marks a chapter as read for the authenticated user. This operation is idempotent—calling it multiple times returns the same result.
+
+**Response (201 Created - new record):**
+
+```json
+{
+  "data": {
+    "id": 1,
+    "day_chapter_id": 5,
+    "read_at": "2025-01-15T10:30:00+00:00"
+  }
+}
+```
+
+**Response (200 OK - already marked):**
+
+```json
+{
+  "data": {
+    "id": 1,
+    "day_chapter_id": 5,
+    "read_at": "2025-01-15T10:30:00+00:00"
+  }
+}
+```
+
+### Mark chapter as unread
+
+```bash
+DELETE /api/chapters/{chapter}/progress
+```
+
+Removes the read status for a chapter.
+
+**Response:**
+
+```json
+{
+  "success": true
+}
+```
+
+---
+
+## User Settings API
+
+The User Settings API allows users to manage their preferences, including their preferred Bible source for reading chapters.
+
+### Get user settings
+
+```bash
+GET /api/settings
+```
+
+Returns the authenticated user's current settings.
+
+**Response:**
+
+```json
+{
+  "data": {
+    "bible_source": "youversion",
+    "bible_version": "TLA"
+  }
+}
+```
+
+### Update user settings
+
+```bash
+PUT /api/settings
+Content-Type: application/json
+```
+
+Updates the user's settings. All fields are optional.
+
+**Request body:**
+
+```json
+{
+  "bible_source": "biblegateway",
+  "bible_version": "TLA"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `bible_source` | string | Preferred Bible app: `youversion` or `biblegateway` |
+| `bible_version` | string | Bible version code (max 10 chars), e.g., `TLA` |
+
+**Response:**
+
+```json
+{
+  "data": {
+    "bible_source": "biblegateway",
+    "bible_version": "TLA"
+  }
+}
+```
+
+**Validation errors (422):**
+
+```json
+{
+  "message": "The bible source field must be one of: youversion, biblegateway.",
+  "errors": {
+    "bible_source": ["The bible source field must be one of: youversion, biblegateway."]
+  }
+}
+```

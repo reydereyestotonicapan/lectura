@@ -16,10 +16,20 @@ class DayFactory extends Factory
      */
     public function definition(): array
     {
+        $date = fake()->unique()->dateTimeBetween('-2 years', '-1 day');
+
         return [
-            'date_assigned' => date('Y-m-d'),
-            'chapters' => 'Genesis 1 a Genesis 2',
-            'day_month' => date('d').'/'.date('m')
+            'date_assigned' => $date->format('Y-m-d'),
+            'chapters'      => 'Genesis 1 a Genesis 2',
+            'day_month'     => $date->format('d/m'),
         ];
+    }
+
+    public function today(): static
+    {
+        return $this->state([
+            'date_assigned' => now()->toDateString(),
+            'day_month'     => now()->format('d/m'),
+        ]);
     }
 }

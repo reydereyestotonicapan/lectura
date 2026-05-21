@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "gRafé",
+    "slug": "grafe",
+    "scheme": "grafe",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#895301"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.reydereyestotonicapan.grafe"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#895301"
+      },
+      "package": "org.reydereyestotonicapan.grafe",
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin",
+      "./plugins/withYouVersionQuery"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a3ab3453-1601-4a14-b24e-9c39326368c0"
+      }
+    },
+    "owner": "reydereyestotonicapan"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "860937846633",
+    "project_id": "bible-reading-quiz",
+    "storage_bucket": "bible-reading-quiz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860937846633:android:1e30bc3042edf59da3c7f8",
+        "android_client_info": {
+          "package_name": "org.reydereyestotonicapan.grafe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "860937846633-3gpq2g9pfk19ib8ejjtkpds6kftnrp0m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.reydereyestotonicapan.grafe",
+            "certificate_hash": "42cb5be5a62156a1b70412d16e56969d8d278ec6"
+          }
+        },
+        {
+          "client_id": "860937846633-ee6hl5nb2ooqvvi71jcakodooqa86b6r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.reydereyestotonicapan.grafe",
+            "certificate_hash": "20f1200a71375f66ae87fb2223f01c5c4386866f"
+          }
+        },
+        {
+          "client_id": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBU_ndV6Tvl9VfJp72ufgvUKspmkKzDb4w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

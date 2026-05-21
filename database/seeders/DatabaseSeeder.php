@@ -62,6 +62,7 @@ class DatabaseSeeder extends Seeder
             ShieldSeeder::class,
             PermissionsSeeder::class,
             ReadersSeeder::class,
+            DayChaptersSeeder::class,
         ]);
     }
 }

@@ -22,4 +22,8 @@ yarn-error.log
 /.vscode
 /.zed
 /public/*
+!/public/images
 supervisord.pid
+storage/app/firebase/
+CLAUDE.md
+.claude

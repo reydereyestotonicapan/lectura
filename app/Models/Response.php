@@ -12,6 +12,15 @@ class Response extends Model
     /** @use HasFactory<\Database\Factories\ResponseFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'day_id',
+        'question_id',
+        'answer_id',
+        'comment_user',
+        'status',
+    ];
+
     protected $casts = [
         'status' => StatusResponse::class,
     ];

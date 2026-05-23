@@ -25,6 +25,18 @@ class PermissionsSeeder extends Seeder
             'view_any_category',
             'view_any_ministry',
             'view_any_asset',
+            'view_any_weekly::kids::reading',
+            'view_weekly::kids::reading',
+            'create_weekly::kids::reading',
+            'update_weekly::kids::reading',
+            'delete_weekly::kids::reading',
+            'delete_any_weekly::kids::reading',
+            'force_delete_weekly::kids::reading',
+            'force_delete_any_weekly::kids::reading',
+            'restore_weekly::kids::reading',
+            'restore_any_weekly::kids::reading',
+            'replicate_weekly::kids::reading',
+            'reorder_weekly::kids::reading',
         ];
         $adminPermissions = [
             'view_any_day',

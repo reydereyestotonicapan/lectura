@@ -63,3 +63,19 @@ export interface PaginatedResponse<T> {
     total: number;
   };
 }
+
+export interface KidsReading {
+  id: number;
+  week_number: number;
+  year: number;
+  week_label: string;
+  title: string;
+  passage: string;
+  description: string | null;
+  has_pdf: boolean;
+  is_current: boolean;
+}
+
+export interface KidsReadingDetail extends KidsReading {
+  pdf_url: string | null;
+}

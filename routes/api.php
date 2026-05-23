@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChapterProgressController;
+use App\Http\Controllers\Api\KidsReadingController;
 use App\Http\Controllers\Api\ReadingController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,12 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/readings/today', [ReadingController::class, 'today']);
 Route::get('/readings/{day}/questions', [ReadingController::class, 'questions']);
 Route::get('/readings/{day}/chapters', [ChapterProgressController::class, 'show']);
+
+// Kids readings public routes (no auth required)
+Route::get('/kids-readings', [KidsReadingController::class, 'index']);
+Route::get('/kids-readings/current', [KidsReadingController::class, 'current']);
+Route::get('/kids-readings/{reading}', [KidsReadingController::class, 'show']);
+Route::get('/kids-readings/{reading}/download', [KidsReadingController::class, 'download']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('hello', function () {

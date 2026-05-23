@@ -5,6 +5,7 @@ import { AppTabsParamList } from './types';
 import TodayStack from './TodayStack';
 import AccountStack from './AccountStack';
 import HistoryStack from './HistoryStack';
+import KidsStack from './KidsStack';
 import { useTheme, createShadows } from '../theme';
 
 const Tab = createBottomTabNavigator<AppTabsParamList>();
@@ -56,6 +57,13 @@ export default function AppTabs() {
         component={HistoryStack}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} colors={colors} />,
+        }}
+      />
+      <Tab.Screen
+        name="KidsTab"
+        component={KidsStack}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👶" focused={focused} colors={colors} />,
         }}
       />
       <Tab.Screen

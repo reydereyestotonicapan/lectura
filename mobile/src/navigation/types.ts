@@ -22,8 +22,14 @@ export type AccountStackParamList = {
   Settings: undefined;
 };
 
+export type KidsStackParamList = {
+  KidsReadings: undefined;
+  KidsReadingDetail: { id: number };
+};
+
 export type AppTabsParamList = {
   TodayTab: undefined;
   History: undefined;
+  KidsTab: undefined;
   Account: undefined;
 };

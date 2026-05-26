@@ -74,7 +74,7 @@ export default function LoginScreen() {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
       const idToken = response.data?.idToken;
-      if (!idToken) throw new Error('No id_token received');
+      if (!idToken) return;
       const googleCredential = GoogleAuthProvider.credential(idToken);
       const userCredential = await signInWithCredential(firebaseAuth, googleCredential);
       const firebaseIdToken = await userCredential.user.getIdToken();
@@ -82,7 +82,7 @@ export default function LoginScreen() {
       await signIn(token, user);
     } catch (err: any) {
       if (err.code !== statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Error', `${err.message}`);
+        Alert.alert('Error', 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
       }
     } finally {
       setIsLoading(false);
@@ -90,13 +90,13 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={[styles.root, { backgroundColor: colors.goldDeep }]} 
+    <KeyboardAvoidingView
+      style={[styles.root, { backgroundColor: colors.goldDeep }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       enabled={Platform.OS === 'ios'}
     >
-      <ScrollView 
-        contentContainerStyle={styles.scroll} 
+      <ScrollView
+        contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         bounces={false}
@@ -104,8 +104,8 @@ export default function LoginScreen() {
 
         {/* Hero gradient section */}
         <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-          <Image 
-            source={require('../../assets/app-icon.png')} 
+          <Image
+            source={require('../../assets/app-icon.png')}
             style={styles.heroIcon}
             resizeMode="contain"
           />

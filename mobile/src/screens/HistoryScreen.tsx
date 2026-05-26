@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getResponses } from '../api/readings';
 import { useTheme, Radii, Spacing, createShadows, ThemeColors } from '../theme';
 import { UserResponse } from '../types/api';
@@ -104,9 +105,12 @@ export default function HistoryScreen() {
     setIsLoading(false);
   }, [loadPage]);
 
-  useEffect(() => {
-    init();
-  }, [init]);
+  // Reload data every time the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      init();
+    }, [init])
+  );
 
   const loadMore = async () => {
     if (isFetchingMore || page >= lastPage) return;

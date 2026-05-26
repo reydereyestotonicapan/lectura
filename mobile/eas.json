@@ -15,6 +15,16 @@
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"
       }
     },
+    "staging": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://splendid-commitment-production.up.railway.app",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {

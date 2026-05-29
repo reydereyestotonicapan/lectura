@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { signOut as firebaseSignOut } from 'firebase/auth';
 import { getToken, saveToken, deleteToken } from '../storage/secureStore';
 import { setSignOutHandler } from '../api/client';
+import { deleteAccount as apiDeleteAccount } from '../api/auth';
 import { firebaseAuth } from '../firebase';
 import { ApiUser } from '../types/api';
 
@@ -35,6 +36,7 @@ interface AuthState {
   isLoading: boolean;
   signIn: (token: string, user: ApiUser) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   enterGuestMode: () => void;
   exitGuestMode: () => void;
   setUser: (user: ApiUser) => void;
@@ -106,9 +108,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData);
   };
 
+  const deleteAccount = async () => {
+    await apiDeleteAccount(); // lanza si falla — no limpiar sesión
+    await signOut();          // solo si la API tuvo éxito
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: hasToken, isGuest, isLoading, signIn, signOut, enterGuestMode, exitGuestMode, setUser }}
+      value={{ user, isAuthenticated: hasToken, isGuest, isLoading, signIn, signOut, deleteAccount, enterGuestMode, exitGuestMode, setUser }}
     >
       {children}
     </AuthContext.Provider>

@@ -15,3 +15,7 @@ export async function firebaseLogin(idToken: string): Promise<{ token: string; u
   const { data } = await client.post('/auth/firebase-login', { firebase_token: idToken });
   return data;
 }
+
+export async function deleteAccount(): Promise<void> {
+  await client.delete('/account');
+}

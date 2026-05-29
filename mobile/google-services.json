@@ -14,11 +14,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "860937846633-1bbppg393t33o0d4e5chhu7orolqo7j5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.reydereyestotonicapan.grafe",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "860937846633-3gpq2g9pfk19ib8ejjtkpds6kftnrp0m.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "org.reydereyestotonicapan.grafe",
             "certificate_hash": "42cb5be5a62156a1b70412d16e56969d8d278ec6"
+          }
+        },
+        {
+          "client_id": "860937846633-4d98kjj7n3m8h9i7k1m41kaqkf5ggc2v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.reydereyestotonicapan.grafe",
+            "certificate_hash": "1b0cacac79602f530cc4484c9a144de35b8d0538"
           }
         },
         {

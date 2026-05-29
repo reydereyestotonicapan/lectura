@@ -10,6 +10,18 @@
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://lectura.reydereyestotonicapan.org",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"
+      }
+    },
+    "preview-ios-sim": {
+      "ios": {
+        "simulator": true
+      },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://lectura.reydereyestotonicapan.org",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"

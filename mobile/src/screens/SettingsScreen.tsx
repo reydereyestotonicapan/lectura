@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useTheme, Radii, Spacing, createShadows, ThemeMode } from '../theme';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { BibleSource } from '../types/chapter';
 import LoadingState from '../components/LoadingState';
 import SectionHeader from '../components/ui/SectionHeader';
+import { useAuth } from '../auth/AuthContext';
 
 interface BibleSourceOption {
   value: BibleSource;
@@ -44,10 +45,42 @@ export default function SettingsScreen() {
   const { colors, isDark, mode: themeMode, setMode: setThemeMode } = useTheme();
   const shadows = createShadows(isDark);
   const { settings, isLoading, error, updateBibleSource } = useUserSettings();
+  const { deleteAccount, isAuthenticated } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (isLoading) return <LoadingState />;
 
   const styles = createStyles(colors, shadows);
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      // AuthContext.signOut() navigates automatically to login
+    } catch {
+      Alert.alert(
+        'Error',
+        'No fue posible eliminar la cuenta. Por favor, inténtalo de nuevo.',
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Eliminar cuenta',
+      'Esta acción es permanente e irreversible. Se eliminarán todos tus datos y no podrás recuperar tu cuenta.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar cuenta',
+          style: 'destructive',
+          onPress: confirmDelete,
+        },
+      ],
+    );
+  };
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -63,6 +96,7 @@ export default function SettingsScreen() {
               style={[styles.themeOption, selected && styles.themeOptionSelected]}
               onPress={() => setThemeMode(opt.value)}
               activeOpacity={0.8}
+              disabled={isDeleting}
             >
               <Text style={styles.themeIcon}>{opt.icon}</Text>
               <Text style={[styles.themeLabel, selected && styles.themeLabelSelected]}>
@@ -91,6 +125,7 @@ export default function SettingsScreen() {
               style={[styles.option, selected && styles.optionSelected]}
               onPress={() => opt.value !== settings.bible_source && updateBibleSource(opt.value)}
               activeOpacity={0.8}
+              disabled={isDeleting}
             >
               <View style={[styles.optionIcon, selected && styles.optionIconSelected]}>
                 <Text style={styles.optionEmoji}>{opt.icon}</Text>
@@ -115,6 +150,32 @@ export default function SettingsScreen() {
           Si tienes la app de YouVersion instalada, te recomendamos usarla para una mejor experiencia de lectura.
         </Text>
       </View>
+
+      {isAuthenticated && (
+        <>
+          <SectionHeader
+            title="Zona de Peligro"
+            subtitle="Acciones permanentes e irreversibles"
+            style={styles.dangerSection}
+          />
+          <View style={styles.dangerCard}>
+            <Text style={styles.dangerWarning}>
+              Eliminar tu cuenta borrará permanentemente todos tus datos, incluyendo tu historial de lecturas y respuestas. Esta acción no se puede deshacer.
+            </Text>
+            <TouchableOpacity
+              style={[styles.dangerButton, isDeleting && styles.dangerButtonDisabled]}
+              onPress={handleDeleteAccount}
+              disabled={isDeleting}
+              activeOpacity={0.8}
+            >
+              {isDeleting
+                ? <ActivityIndicator color={colors.textInverse} size="small" />
+                : <Text style={styles.dangerButtonText}>Eliminar cuenta</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -248,5 +309,35 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors'], shadows: Re
       fontSize: 13,
       color: colors.textMuted,
       lineHeight: 20,
+    },
+
+    // Danger zone
+    dangerSection: { marginBottom: 20, marginTop: 32 },
+    dangerCard: {
+      backgroundColor: colors.errorBg,
+      borderRadius: Radii.xl,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.errorBorder,
+      gap: 16,
+    },
+    dangerWarning: {
+      fontSize: 13,
+      color: colors.error,
+      lineHeight: 20,
+    },
+    dangerButton: {
+      backgroundColor: colors.error,
+      borderRadius: Radii.lg,
+      paddingVertical: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 48,
+    },
+    dangerButtonDisabled: { opacity: 0.6 },
+    dangerButtonText: {
+      color: colors.textInverse,
+      fontSize: 15,
+      fontWeight: '700',
     },
   });

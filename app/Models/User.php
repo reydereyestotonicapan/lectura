@@ -75,6 +75,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Get the user's awards.
+     */
+    public function awards(): HasMany
+    {
+        return $this->hasMany(Award::class);
+    }
+
+    /**
      * Get the user's chapter progress records.
      */
     public function chapterProgress(): HasMany

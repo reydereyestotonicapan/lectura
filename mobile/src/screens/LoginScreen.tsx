@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,9 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, OAuthProvider, signInWithCredential } from 'firebase/auth';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { generateNonce } from '../utils/generateNonce';
 import { useAuth } from '../auth/AuthContext';
 import { useTheme, Radii, createShadows } from '../theme';
 import { emailLogin, firebaseLogin } from '../api/auth';
@@ -43,7 +45,12 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [appleAvailable, setAppleAvailable] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    AppleAuthentication.isAvailableAsync().then(setAppleAvailable);
+  }, []);
 
   const handleEmailLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -84,6 +91,43 @@ export default function LoginScreen() {
       if (err.code !== statusCodes.SIGN_IN_CANCELLED) {
         Alert.alert('Error', 'No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const { rawNonce, hashedNonce } = await generateNonce();
+
+      const appleCredential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce: hashedNonce,
+      });
+
+      if (!appleCredential.identityToken) {
+        Alert.alert('Error', 'No se pudo iniciar sesión con Apple. Inténtalo de nuevo.');
+        return;
+      }
+
+      const oauthCredential = new OAuthProvider('apple.com').credential({
+        idToken: appleCredential.identityToken,
+        rawNonce,
+      });
+
+      const userCredential = await signInWithCredential(firebaseAuth, oauthCredential);
+      const firebaseIdToken = await userCredential.user.getIdToken();
+      const { token, user } = await firebaseLogin(firebaseIdToken);
+      await signIn(token, user);
+    } catch (err: any) {
+      if (err.code === 'ERR_REQUEST_CANCELED') {
+        return;
+      }
+      Alert.alert('Error', 'No se pudo iniciar sesión con Apple. Inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -204,6 +248,17 @@ export default function LoginScreen() {
             <Text style={styles.googleIcon}>G</Text>
             <Text style={[styles.googleText, { color: colors.textPrimary }]}>Continuar con Google</Text>
           </TouchableOpacity>
+
+          {/* Apple */}
+          {appleAvailable && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={Radii.lg}
+              style={styles.appleBtn}
+              onPress={handleAppleSignIn}
+            />
+          )}
 
           {/* Guest option */}
           <View style={[styles.guestSep, { backgroundColor: colors.border }]} />
@@ -356,6 +411,13 @@ const styles = StyleSheet.create({
   googleText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+
+  // Apple
+  appleBtn: {
+    width: '100%',
+    height: 50,
+    marginTop: 12,
   },
 
   // Guest

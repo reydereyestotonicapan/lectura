@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChapterProgressController;
 use App\Http\Controllers\Api\DeleteAccountController;
 use App\Http\Controllers\Api\KidsReadingController;
+use App\Http\Controllers\Api\PushTokenController;
 use App\Http\Controllers\Api\ReadingController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // User settings routes
     Route::get('/settings', [UserSettingsController::class, 'show']);
     Route::put('/settings', [UserSettingsController::class, 'update']);
+
+    // Push token registration
+    Route::put('/push-token', [PushTokenController::class, 'update']);
 
     // Account deletion
     Route::delete('/account', [DeleteAccountController::class, 'destroy']);

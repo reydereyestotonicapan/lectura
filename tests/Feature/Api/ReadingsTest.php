@@ -20,8 +20,9 @@ beforeEach(function () {
 // GET /api/readings/today
 // ---------------------------------------------------------------------------
 
-it('returns 401 for unauthenticated requests to today', function () {
-    $this->getJson('/api/readings/today')->assertStatus(401);
+it('returns 404 for unauthenticated requests to today when no day exists', function () {
+    // /api/readings/today is a public route (no auth required); with no Day for today it returns 404
+    $this->getJson('/api/readings/today')->assertStatus(404);
 });
 
 it('returns 404 when there is no reading assigned for today', function () {

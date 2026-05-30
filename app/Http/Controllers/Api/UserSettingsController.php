@@ -21,8 +21,10 @@ class UserSettingsController extends Controller
 
         return response()->json([
             'data' => [
-                'bible_source' => $user->bible_source,
-                'bible_version' => $user->settings['bible_version'] ?? 'TLA',
+                'bible_source'          => $user->bible_source,
+                'bible_version'         => $user->settings['bible_version'] ?? 'TLA',
+                'notification_time'     => $user->settings['notification_time'] ?? '07:00',
+                'notifications_enabled' => $user->settings['notifications_enabled'] ?? true,
             ],
         ]);
     }
@@ -35,8 +37,10 @@ class UserSettingsController extends Controller
     public function update(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'bible_source' => ['sometimes', Rule::in(['youversion', 'biblegateway'])],
-            'bible_version' => ['sometimes', 'string', 'max:10'],
+            'bible_source'          => ['sometimes', Rule::in(['youversion', 'biblegateway'])],
+            'bible_version'         => ['sometimes', 'string', 'max:10'],
+            'notification_time'     => ['sometimes', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+            'notifications_enabled' => ['sometimes', 'boolean'],
         ]);
 
         $user = $request->user();
@@ -50,13 +54,23 @@ class UserSettingsController extends Controller
             $settings['bible_version'] = $validated['bible_version'];
         }
 
+        if (isset($validated['notification_time'])) {
+            $settings['notification_time'] = $validated['notification_time'];
+        }
+
+        if (array_key_exists('notifications_enabled', $validated)) {
+            $settings['notifications_enabled'] = $validated['notifications_enabled'];
+        }
+
         $user->settings = $settings;
         $user->save();
 
         return response()->json([
             'data' => [
-                'bible_source' => $user->bible_source,
-                'bible_version' => $user->settings['bible_version'] ?? 'TLA',
+                'bible_source'          => $user->bible_source,
+                'bible_version'         => $user->settings['bible_version'] ?? 'TLA',
+                'notification_time'     => $user->settings['notification_time'] ?? '07:00',
+                'notifications_enabled' => $user->settings['notifications_enabled'] ?? true,
             ],
         ]);
     }

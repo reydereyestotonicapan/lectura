@@ -10,6 +10,8 @@ export interface UseUserSettingsReturn {
   isLoading: boolean;
   error: string | null;
   updateBibleSource: (source: BibleSource) => Promise<void>;
+  updateNotificationTime: (time: string) => Promise<void>;
+  updateNotificationsEnabled: (enabled: boolean) => Promise<void>;
   refreshSettings: () => Promise<void>;
 }
 
@@ -20,6 +22,8 @@ export interface UseUserSettingsReturn {
 const DEFAULT_SETTINGS: UserSettings = {
   bible_source: 'youversion',
   bible_version: 'TLA',
+  notification_time: '07:00',
+  notifications_enabled: true,
 };
 
 /**
@@ -107,6 +111,52 @@ export function useUserSettings(): UseUserSettingsReturn {
     }
   }, [settings]);
 
+  /**
+   * Update the user's notification time preference
+   * 
+   * @param time - The new notification time in HH:MM 24-hour format
+   */
+  const updateNotificationTime = useCallback(async (time: string) => {
+    const previous = settings;
+
+    // Optimistic update
+    setSettings(prev => ({ ...prev, notification_time: time }));
+    setError(null);
+
+    try {
+      const updated = await updateSettings({ notification_time: time });
+      setSettings({ ...DEFAULT_SETTINGS, ...updated });
+    } catch (err) {
+      // Rollback on error
+      setSettings(previous);
+      setError('No se pudo guardar la hora. Intenta de nuevo.');
+      throw err;
+    }
+  }, [settings]);
+
+  /**
+   * Update the user's notifications enabled preference
+   * 
+   * @param enabled - Whether daily reading notifications should be enabled
+   */
+  const updateNotificationsEnabled = useCallback(async (enabled: boolean) => {
+    const previous = settings;
+
+    // Optimistic update
+    setSettings(prev => ({ ...prev, notifications_enabled: enabled }));
+    setError(null);
+
+    try {
+      const updated = await updateSettings({ notifications_enabled: enabled });
+      setSettings({ ...DEFAULT_SETTINGS, ...updated });
+    } catch (err) {
+      // Rollback on error
+      setSettings(previous);
+      setError('No se pudo guardar la preferencia. Intenta de nuevo.');
+      throw err;
+    }
+  }, [settings]);
+
   // Fetch settings on mount
   useEffect(() => {
     fetchSettings();
@@ -117,6 +167,8 @@ export function useUserSettings(): UseUserSettingsReturn {
     isLoading,
     error,
     updateBibleSource,
+    updateNotificationTime,
+    updateNotificationsEnabled,
     refreshSettings,
   };
 }

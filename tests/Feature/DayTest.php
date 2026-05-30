@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Permission;
 uses(RefreshDatabase::class);
 
 it('has admin role', function () {
+    config(['app.default_user_role' => null]); // role doesn't exist in test DB
 
     $user = User::factory()->create([
         'name' => 'Miguel',

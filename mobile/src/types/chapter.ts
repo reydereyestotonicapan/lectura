@@ -118,4 +118,6 @@ export type BibleSource = 'youversion' | 'biblegateway';
 export interface UserSettings {
   bible_source: BibleSource;
   bible_version: string;
+  notification_time: string;       // HH:MM 24-hour format, default '07:00'
+  notifications_enabled: boolean;  // default true
 }

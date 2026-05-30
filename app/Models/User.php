@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'firebase_uid',
         'settings',
+        'expo_push_token',
     ];
 
     /**

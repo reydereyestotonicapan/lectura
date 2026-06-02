@@ -9,4 +9,6 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command(SendDailyReadingNotificationsCommand::class)->everyMinute();
+Schedule::command(SendDailyReadingNotificationsCommand::class)
+    ->everyMinute()
+    ->withoutOverlapping();

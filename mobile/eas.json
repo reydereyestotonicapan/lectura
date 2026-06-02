@@ -56,6 +56,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "staging-ios": {
+      "ios": {
+        "appleId": "menchuxoyon@hotmail.com",
+        "ascAppId": "6775013873",
+        "appleTeamId": "ZM237DL2MY"
+      }
+    }
   }
 }

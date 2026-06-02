@@ -42,7 +42,9 @@ export function useNotifications(
         });
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: 'a3ab3453-1601-4a14-b24e-9c39326368c0',
+      });
       await registerPushToken(tokenData.data);
     }
 

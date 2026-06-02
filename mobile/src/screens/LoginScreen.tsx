@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StackScreenProps } from '@react-navigation/stack';
 import { GoogleAuthProvider, OAuthProvider, signInWithCredential } from 'firebase/auth';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { generateNonce } from '../utils/generateNonce';
@@ -20,6 +21,9 @@ import { useAuth } from '../auth/AuthContext';
 import { useTheme, Radii, createShadows } from '../theme';
 import { emailLogin, firebaseLogin } from '../api/auth';
 import { firebaseAuth } from '../firebase';
+import { AuthStackParamList } from '../navigation/types';
+
+type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 
 let GoogleSignin: any = null;
 let statusCodes: any = {};
@@ -35,7 +39,7 @@ try {
   // Running in Expo Go
 }
 
-export default function LoginScreen() {
+export default function LoginScreen({ navigation }: Props) {
   const { colors, gradients, isDark } = useTheme();
   const shadows = createShadows(isDark);
   const { signIn, enterGuestMode } = useAuth();
@@ -204,6 +208,15 @@ export default function LoginScreen() {
             />
           </View>
 
+          {/* Forgot password */}
+          <TouchableOpacity
+            style={styles.forgotWrap}
+            onPress={() => navigation.navigate('ForgotPassword')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.forgotText, { color: colors.primary }]}>¿Ha olvidado su contraseña?</Text>
+          </TouchableOpacity>
+
           {error ? (
             <View style={[styles.errorBadge, { backgroundColor: colors.errorBg, borderColor: colors.errorBorder }]}>
               <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
@@ -229,6 +242,18 @@ export default function LoginScreen() {
                 <Text style={styles.primaryText}>Iniciar sesión</Text>
               )}
             </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Create account link */}
+          <TouchableOpacity
+            style={styles.registerWrap}
+            onPress={() => navigation.navigate('Register')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.registerText, { color: colors.textMuted }]}>
+              ¿No tienes cuenta?{' '}
+              <Text style={{ color: colors.primary, fontWeight: '700' }}>Abrir una cuenta</Text>
+            </Text>
           </TouchableOpacity>
 
           {/* Divider */}
@@ -362,6 +387,24 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     textAlign: 'center',
+  },
+
+  // Forgot / Register links
+  forgotWrap: {
+    alignSelf: 'flex-end',
+    marginBottom: 4,
+    paddingVertical: 4,
+  },
+  forgotText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  registerWrap: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  registerText: {
+    fontSize: 14,
   },
 
   // Primary button

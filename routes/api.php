@@ -9,8 +9,10 @@ use App\Http\Controllers\Api\ReadingController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/firebase-login', [AuthController::class, 'firebaseLogin']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Public routes — accessible without auth (guests), but honour token when present
 Route::get('/readings/today', [ReadingController::class, 'today']);

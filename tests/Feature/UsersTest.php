@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Permission;
 uses(RefreshDatabase::class);
 
 it('has users page', function () {
+    config(['app.default_user_role' => null]); // role doesn't exist in test DB
     $role = Role::where('name', 'super_admin')->first()
         ?? Role::create(['name' => 'super_admin', 'guard_name' => 'web']);
     $permissions = [

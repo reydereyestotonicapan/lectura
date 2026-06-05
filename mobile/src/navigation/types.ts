@@ -2,6 +2,8 @@ import { Question, SubmitResult } from '../types/api';
 
 export type AuthStackParamList = {
   Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
 };
 
 export type TodayStackParamList = {

@@ -1,6 +1,6 @@
-const { withAndroidManifest } = require('@expo/config-plugins');
+const { withAndroidManifest, withInfoPlist } = require('@expo/config-plugins');
 
-module.exports = function withYouVersionQuery(config) {
+function withYouVersionAndroid(config) {
   return withAndroidManifest(config, (config) => {
     const manifest = config.modResults.manifest;
 
@@ -27,4 +27,26 @@ module.exports = function withYouVersionQuery(config) {
 
     return config;
   });
+}
+
+function withYouVersionIos(config) {
+  return withInfoPlist(config, (config) => {
+    const plist = config.modResults;
+
+    if (!Array.isArray(plist.LSApplicationQueriesSchemes)) {
+      plist.LSApplicationQueriesSchemes = [];
+    }
+
+    if (!plist.LSApplicationQueriesSchemes.includes('youversion')) {
+      plist.LSApplicationQueriesSchemes.push('youversion');
+    }
+
+    return config;
+  });
+}
+
+module.exports = function withYouVersionQuery(config) {
+  config = withYouVersionAndroid(config);
+  config = withYouVersionIos(config);
+  return config;
 };

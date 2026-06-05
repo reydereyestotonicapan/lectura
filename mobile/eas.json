@@ -37,6 +37,16 @@
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"
       }
     },
+    "staging-ios": {
+      "distribution": "store",
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://splendid-commitment-production.up.railway.app",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "860937846633-thvaqb5mf0et4k4hqkrhfip40f2sar8q.apps.googleusercontent.com"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "env": {
@@ -46,6 +56,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "staging-ios": {
+      "ios": {
+        "appleId": "menchuxoyon@hotmail.com",
+        "ascAppId": "6775013873",
+        "appleTeamId": "ZM237DL2MY"
+      }
+    }
   }
 }

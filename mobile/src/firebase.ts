@@ -1,5 +1,5 @@
 import { getApps, initializeApp } from 'firebase/app';
-import { initializeAuth, inMemoryPersistence } from 'firebase/auth';
+import { initializeAuth, inMemoryPersistence, OAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBU_ndV6Tvl9VfJp72ufgvUKspmkKzDb4w',
@@ -12,3 +12,4 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const firebaseAuth = initializeAuth(app, { persistence: inMemoryPersistence });
+export const appleProvider = new OAuthProvider('apple.com');

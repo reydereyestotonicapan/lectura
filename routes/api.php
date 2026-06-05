@@ -4,12 +4,15 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChapterProgressController;
 use App\Http\Controllers\Api\DeleteAccountController;
 use App\Http\Controllers\Api\KidsReadingController;
+use App\Http\Controllers\Api\PushTokenController;
 use App\Http\Controllers\Api\ReadingController;
 use App\Http\Controllers\Api\UserSettingsController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/firebase-login', [AuthController::class, 'firebaseLogin']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Public routes — accessible without auth (guests), but honour token when present
 Route::get('/readings/today', [ReadingController::class, 'today']);
@@ -39,6 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // User settings routes
     Route::get('/settings', [UserSettingsController::class, 'show']);
     Route::put('/settings', [UserSettingsController::class, 'update']);
+
+    // Push token registration
+    Route::put('/push-token', [PushTokenController::class, 'update']);
 
     // Account deletion
     Route::delete('/account', [DeleteAccountController::class, 'destroy']);

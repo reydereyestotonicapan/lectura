@@ -5,7 +5,7 @@ import { BibleSource } from '../types/chapter';
 /**
  * Generates a YouVersion deep link URL for a specific Bible chapter.
  * Uses the TLA (Traducción en Lenguaje Actual) version by default.
- * 
+ *
  * @param book - Spanish Bible book name (e.g., "Romanos")
  * @param chapter - Chapter number
  * @returns YouVersion deep link URL
@@ -18,7 +18,7 @@ export function getYouVersionUrl(book: string, chapter: number): string {
 /**
  * Generates a BibleGateway web URL for a specific Bible chapter.
  * Uses the TLA (Traducción en Lenguaje Actual) version.
- * 
+ *
  * @param book - Spanish Bible book name (e.g., "Romanos")
  * @param chapter - Chapter number
  * @returns BibleGateway web URL
@@ -30,7 +30,7 @@ export function getBibleGatewayUrl(book: string, chapter: number): string {
 
 /**
  * Checks if the YouVersion app is installed and can be opened.
- * 
+ *
  * @returns Promise resolving to true if YouVersion can be opened
  */
 export async function canOpenYouVersion(): Promise<boolean> {
@@ -41,7 +41,7 @@ export async function canOpenYouVersion(): Promise<boolean> {
 /**
  * Opens a Bible chapter in the user's preferred Bible source.
  * If YouVersion is preferred but not installed, falls back to BibleGateway.
- * 
+ *
  * @param book - Spanish Bible book name (e.g., "Romanos")
  * @param chapter - Chapter number
  * @param preference - User's preferred Bible source ('youversion' or 'biblegateway')
@@ -53,7 +53,13 @@ export async function openChapter(
 ): Promise<void> {
   if (preference === 'youversion') {
     const youversionUrl = getYouVersionUrl(book, chapter);
-    const canOpen = await Linking.canOpenURL(youversionUrl);
+    let canOpen = false;
+    try {
+        canOpen = await Linking.canOpenURL(youversionUrl);
+    }
+    catch {
+        // scheme not in LSApplicationQueriesSchemes yet; treat as not installed
+    }
 
     if (canOpen) {
       await Linking.openURL(youversionUrl);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, Switch, Platform } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTheme, Radii, Spacing, createShadows, ThemeMode } from '../theme';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { BibleSource } from '../types/chapter';
@@ -44,13 +45,39 @@ const THEME_OPTIONS: ThemeOption[] = [
 export default function SettingsScreen() {
   const { colors, isDark, mode: themeMode, setMode: setThemeMode } = useTheme();
   const shadows = createShadows(isDark);
-  const { settings, isLoading, error, updateBibleSource } = useUserSettings();
+  const { settings, isLoading, error, updateBibleSource, updateNotificationTime, updateNotificationsEnabled } = useUserSettings();
   const { deleteAccount, isAuthenticated } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   if (isLoading) return <LoadingState />;
 
   const styles = createStyles(colors, shadows);
+
+  /** Convert a HH:MM string to a Date object (today's date, given time) */
+  const timeStringToDate = (timeStr: string): Date => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+  };
+
+  /** Convert a Date object to a HH:MM string */
+  const dateToTimeString = (date: Date): string => {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  const handleTimeChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    // On Android the picker closes automatically; on iOS it stays open
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (selectedDate) {
+      updateNotificationTime(dateToTimeString(selectedDate));
+    }
+  };
 
   const confirmDelete = async () => {
     setIsDeleting(true);
@@ -105,6 +132,68 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           );
         })}
+      </View>
+
+      {/* Notifications */}
+      <SectionHeader title="Notificaciones" subtitle="Recibe un recordatorio diario de lectura" style={styles.section} />
+
+      <View style={styles.notifCard}>
+        {/* Enable/disable toggle row */}
+        <View style={styles.notifRow}>
+          <View style={styles.notifRowBody}>
+            <Text style={styles.notifRowLabel}>Notificaciones diarias</Text>
+            <Text style={styles.notifRowDesc}>Recibe un aviso con los capítulos del día</Text>
+          </View>
+          <Switch
+            value={settings.notifications_enabled}
+            onValueChange={(enabled) => updateNotificationsEnabled(enabled)}
+            trackColor={{ false: colors.border, true: colors.gold }}
+            thumbColor={settings.notifications_enabled ? colors.primary : colors.textMuted}
+            disabled={isDeleting}
+          />
+        </View>
+
+        {/* Time picker row — only visible when notifications are enabled */}
+        {settings.notifications_enabled && (
+          <View style={styles.notifTimeRow}>
+            <View style={styles.notifRowBody}>
+              <Text style={styles.notifRowLabel}>Hora de notificación</Text>
+              <Text style={styles.notifRowDesc}>
+                {settings.notification_time} — toca para cambiar
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.timeButton}
+              onPress={() => setShowTimePicker(true)}
+              activeOpacity={0.8}
+              disabled={isDeleting}
+            >
+              <Text style={styles.timeButtonText}>{settings.notification_time}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* DateTimePicker — shown inline on iOS, as a dialog on Android */}
+        {settings.notifications_enabled && showTimePicker && (
+          <DateTimePicker
+            value={timeStringToDate(settings.notification_time)}
+            mode="time"
+            is24Hour={true}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleTimeChange}
+          />
+        )}
+
+        {/* On iOS, show a "Done" button to dismiss the inline spinner */}
+        {settings.notifications_enabled && showTimePicker && Platform.OS === 'ios' && (
+          <TouchableOpacity
+            style={styles.timePickerDone}
+            onPress={() => setShowTimePicker(false)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.timePickerDoneText}>Listo</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Bible Source Selector */}
@@ -309,6 +398,65 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors'], shadows: Re
       fontSize: 13,
       color: colors.textMuted,
       lineHeight: 20,
+    },
+
+    // Notifications section
+    notifCard: {
+      backgroundColor: colors.surface,
+      borderRadius: Radii.xl,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      marginBottom: 32,
+      overflow: 'hidden',
+      ...shadows.xs,
+    },
+    notifRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      gap: 14,
+    },
+    notifTimeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      paddingTop: 0,
+      gap: 14,
+    },
+    notifRowBody: { flex: 1 },
+    notifRowLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      marginBottom: 3,
+    },
+    notifRowDesc: {
+      fontSize: 13,
+      color: colors.textMuted,
+      lineHeight: 18,
+    },
+    timeButton: {
+      backgroundColor: colors.goldFaint,
+      borderRadius: Radii.md,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderWidth: 1,
+      borderColor: colors.goldLight,
+    },
+    timeButtonText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    timePickerDone: {
+      alignItems: 'flex-end',
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+    },
+    timePickerDoneText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.primary,
     },
 
     // Danger zone

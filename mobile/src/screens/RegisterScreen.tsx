@@ -89,7 +89,7 @@ export default function RegisterScreen({ navigation }: Props) {
             <Text style={styles.backLabel}>Iniciar sesión</Text>
           </TouchableOpacity>
           <Text style={styles.heroTitle}>Crear cuenta</Text>
-          <Text style={styles.heroSub}>Únete al ministerio de lectura</Text>
+          <Text style={styles.heroSub}>Únete al plan de lectura</Text>
         </LinearGradient>
 
         {/* Form sheet */}

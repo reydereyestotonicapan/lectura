@@ -243,7 +243,7 @@ export default function SettingsScreen() {
       {isAuthenticated && (
         <>
           <SectionHeader
-            title="Zona de Peligro"
+            title="Gestión de cuenta"
             subtitle="Acciones permanentes e irreversibles"
             style={styles.dangerSection}
           />

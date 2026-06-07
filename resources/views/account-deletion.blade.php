@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Eliminación de Cuenta - {{ config('app.name', 'Lectura') }}</title>
+    <title>Eliminación de Cuenta - gRafé/title>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -132,12 +132,12 @@
             <p class="subtitle">{{ config('app.name', 'Lectura') }} — Solicitud de eliminación de cuenta y datos</p>
 
             <p>
-                Si deseas eliminar tu cuenta de <strong>{{ config('app.name', 'Lectura') }}</strong> y todos los datos 
+                Si deseas eliminar tu cuenta de <strong>gRafé/strong> y todos los datos
                 asociados, puedes hacerlo siguiendo los pasos indicados a continuación o contactándonos directamente.
             </p>
 
             <div class="warning">
-                ⚠️ <strong>Esta acción es irreversible.</strong> Una vez eliminada tu cuenta, no podrás recuperar 
+                ⚠️ <strong>Esta acción es irreversible.</strong> Una vez eliminada tu cuenta, no podrás recuperar
                 tu historial de respuestas, progreso de lectura ni reconocimientos obtenidos.
             </div>
 
@@ -195,8 +195,8 @@
 
             <h2>Período de retención</h2>
             <p>
-                Los certificados de reconocimiento mensual (archivos PDF almacenados en la nube) se conservan 
-                durante un máximo de <strong>30 días</strong> adicionales tras la eliminación de la cuenta, 
+                Los certificados de reconocimiento mensual (archivos PDF almacenados en la nube) se conservan
+                durante un máximo de <strong>30 días</strong> adicionales tras la eliminación de la cuenta,
                 después de los cuales son eliminados permanentemente de nuestros servidores.
             </p>
             <p>
@@ -207,7 +207,7 @@
             <p>Para cualquier duda sobre el proceso de eliminación de cuenta:</p>
             <div class="contact-box">
                 <p style="margin:0">
-                    📧 <strong>Correo:</strong> 
+                    📧 <strong>Correo:</strong>
                     <a href="mailto:iglesiareydereyestoto@gmail.com">
                         iglesiareydereyestoto@gmail.com
                     </a>

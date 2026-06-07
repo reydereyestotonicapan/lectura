@@ -83,10 +83,10 @@
     <div class="container">
         <div class="card">
             <h1>Soporte</h1>
-            <p class="subtitle">{{ config('app.name', 'Lectura') }} — Centro de ayuda y contacto</p>
+            <p class="subtitle">gRafé— Centro de ayuda y contacto</p>
 
             <p>
-                ¿Necesitas ayuda con <strong>{{ config('app.name', 'Lectura') }}</strong>? Estamos para
+                ¿Necesitas ayuda con <strong>gRafé</strong>? Estamos para
                 acompañarte. Revisa las preguntas frecuentes a continuación o escríbenos directamente y
                 con gusto te ayudaremos.
             </p>

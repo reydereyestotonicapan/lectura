@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppTabsParamList } from './types';
 import TodayStack from './TodayStack';
 import AccountStack from './AccountStack';
@@ -27,23 +28,28 @@ function TabIcon({ emoji, focused, colors }: TabIconProps) {
 export default function AppTabs() {
   const { colors, isDark } = useTheme();
   const shadows = createShadows(isDark);
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          height: 64,
+          height: Platform.OS === 'android' ? 64 + insets.bottom : 64,
+          paddingBottom: Platform.OS === 'android' ? insets.bottom : 0,
+          paddingTop: 0,
           ...shadows.md,
         },
         tabBarItemStyle: {
           paddingVertical: 8,
         },
       }}
+      safeAreaInsets={Platform.OS === 'android' ? { bottom: 0 } : undefined}
     >
       <Tab.Screen
         name="TodayTab"

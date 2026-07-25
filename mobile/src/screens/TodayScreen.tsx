@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking, Image } from 'react-native';
+import React, { useEffect, useState, useCallback, useLayoutEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking, Image, RefreshControl, AppState } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -38,7 +38,9 @@ export default function TodayScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  const { chapters, isLoading: isLoadingChapters, error: chapterError, toggleChapter } =
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { chapters, isLoading: isLoadingChapters, error: chapterError, toggleChapter, refreshProgress } =
     useChapterProgress(day?.id ?? null);
   const { isGuest, exitGuestMode } = useAuth();
   const { settings, refreshSettings } = useUserSettings();
@@ -75,6 +77,34 @@ export default function TodayScreen({ navigation }: Props) {
     }, [refreshSettings])
   );
 
+  const appStateRef = useRef(AppState.currentState);
+  const lastRefreshRef = useRef(0);
+
+  // Core fetch of today's reading + chapters. Never touches the full-screen
+  // loading state, so it can run silently in the background. When `silent`,
+  // a transient network error is swallowed so we keep showing existing content
+  // instead of flashing the error screen on resume.
+  const fetchToday = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setError(null);
+        setNotFound(false);
+      }
+      try {
+        const data = await getToday();
+        setDay(data);
+        setError(null);
+        setNotFound(false);
+        lastRefreshRef.current = Date.now();
+        await Promise.all([refreshProgress(), refreshSettings()]);
+      } catch (err: any) {
+        if (err.response?.status === 404) setNotFound(true);
+        else if (!silent) setError('No se pudo cargar la lectura. Verifica tu conexión.');
+      }
+    },
+    [refreshProgress, refreshSettings]
+  );
+
   const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -82,6 +112,7 @@ export default function TodayScreen({ navigation }: Props) {
     try {
       const data = await getToday();
       setDay(data);
+      lastRefreshRef.current = Date.now();
     } catch (err: any) {
       if (err.response?.status === 404) setNotFound(true);
       else setError('No se pudo cargar la lectura. Verifica tu conexión.');
@@ -93,6 +124,42 @@ export default function TodayScreen({ navigation }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Manual pull-to-refresh — shows the pull spinner.
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchToday();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchToday]);
+
+  // Keep a stable ref to the latest fetch so the AppState listener can be
+  // registered once (below) rather than resubscribing on every dep change.
+  const fetchTodayRef = useRef(fetchToday);
+  useEffect(() => {
+    fetchTodayRef.current = fetchToday;
+  }, [fetchToday]);
+
+  // Auto-refresh whenever the app returns to the foreground. We always refetch
+  // (the server decides what "today" is) instead of trusting the device clock,
+  // which can read stale right after resume. Registered once to avoid resubscribe
+  // races; runs silently and is throttled to dedupe repeated AppState events.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      const resumed = (prev === 'background' || prev === 'inactive') && next === 'active';
+      if (resumed && Date.now() - lastRefreshRef.current > 5000) {
+        // Delay briefly so the app finishes foregrounding / network settles.
+        setTimeout(() => {
+          fetchTodayRef.current(true);
+        }, 400);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   const handleReadChapter = useCallback(
     async (chapter: ChapterWithProgress) => {
@@ -149,6 +216,14 @@ export default function TodayScreen({ navigation }: Props) {
       style={[styles.root, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
+        />
+      }
     >
       {/* Date hero */}
       <AnimatedFade delay={0}>

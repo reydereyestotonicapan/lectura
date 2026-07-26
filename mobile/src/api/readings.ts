@@ -6,8 +6,26 @@ export async function getToday(): Promise<Day> {
   return data.data;
 }
 
-export async function getReadings(page = 1): Promise<PaginatedResponse<Day>> {
-  const { data } = await client.get('/readings', { params: { page } });
+export type ReadingsScope = 'past' | 'upcoming';
+
+export async function getReadings(page = 1, scope: ReadingsScope = 'past'): Promise<PaginatedResponse<Day>> {
+  const { data } = await client.get('/readings', { params: { page, scope } });
+  return data;
+}
+
+export type AwardCategory = 'bronze' | 'silver' | 'gold';
+
+export interface MonthlyProgress {
+  month: string; // "YYYY-MM"
+  days_answered: number;
+  days_in_month: number;
+  category: AwardCategory;
+  silver_threshold: number;
+  gold_threshold: number;
+}
+
+export async function getMonthlyProgress(): Promise<MonthlyProgress> {
+  const { data } = await client.get('/readings/progress');
   return data;
 }
 

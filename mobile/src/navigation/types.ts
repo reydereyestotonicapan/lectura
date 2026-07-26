@@ -9,6 +9,7 @@ export type AuthStackParamList = {
 export type TodayStackParamList = {
   Today: undefined;
   ReadingsList: undefined;
+  ReadingDetail: { dayId: number };
   Quiz: { dayId: number };
   Results: {
     dayId: number;

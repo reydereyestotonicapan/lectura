@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['message' => 'Hello, authenticated user!']);
     });
     Route::get('/readings', [ReadingController::class, 'index']);
+    Route::get('/readings/progress', [ReadingController::class, 'progress']);
     Route::get('/readings/{day}', [ReadingController::class, 'show']);
     Route::post('/readings/{day}/answers', [ReadingController::class, 'submitAnswers']);
     Route::get('/profile', [ReadingController::class, 'profile']);

@@ -506,32 +506,138 @@ class GenerateReadingPlan extends Command
     }
 
     /**
+     * Bulk-persist the schedule in a handful of queries.
+     *
+     * The DayChapterObserver normally rebuilds days.chapters with a SELECT +
+     * UPDATE on every chapter insert — thousands of round-trips that crawl over
+     * a remote proxy. Here we compute each day's display string in PHP up front
+     * and use Day::insert()/DayChapter::insert(), which fire no model events, so
+     * the observer stays out of the loop. The whole thing runs in one atomic
+     * transaction.
+     *
      * @param  array<int, array{date: Carbon, units: array<int,array>, verses: int}>  $schedule
      */
     private function persist(array $schedule): void
     {
-        DB::transaction(function () use ($schedule) {
+        $now = now();
+        $dates = array_map(fn ($e) => $e['date']->toDateString(), $schedule);
+        $min = min($dates);
+        $max = max($dates);
+
+        DB::transaction(function () use ($schedule, $now, $min, $max) {
+            // Pre-existing Day rows on the target dates (usually none — occupied
+            // dates are excluded upstream), keyed by date string.
+            $existing = Day::whereDate('date_assigned', '>=', $min)
+                ->whereDate('date_assigned', '<=', $max)
+                ->get()
+                ->keyBy(fn (Day $d) => $d->date_assigned->toDateString());
+
+            $newDays = [];
             foreach ($schedule as $entry) {
-                /** @var Carbon $date */
-                $date = $entry['date'];
+                $ds = $entry['date']->toDateString();
+                $chapters = $this->buildChaptersString($entry['units']);
 
-                $day = Day::firstOrNew(['date_assigned' => $date->toDateString()]);
-                $day->day_month = $date->format('d/m');
-                $day->save();
+                if ($existing->has($ds)) {
+                    $day = $existing->get($ds);
+                    $day->day_month = $entry['date']->format('d/m');
+                    $day->chapters = $chapters;
+                    $day->saveQuietly();
+                } else {
+                    $newDays[] = [
+                        'date_assigned' => $ds,
+                        'day_month' => $entry['date']->format('d/m'),
+                        'chapters' => $chapters,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
 
+            foreach (array_chunk($newDays, 200) as $chunk) {
+                Day::insert($chunk);
+            }
+
+            // Resolve every target date's id (new + pre-existing) via the model
+            // cast so it works the same on Postgres and SQLite.
+            $dayIds = Day::whereDate('date_assigned', '>=', $min)
+                ->whereDate('date_assigned', '<=', $max)
+                ->get()
+                ->keyBy(fn (Day $d) => $d->date_assigned->toDateString())
+                ->map->id;
+
+            $rows = [];
+            foreach ($schedule as $entry) {
+                $dayId = $dayIds[$entry['date']->toDateString()];
                 $order = 1;
                 foreach ($entry['units'] as $unit) {
-                    DayChapter::create([
-                        'day_id' => $day->id,
+                    $rows[] = [
+                        'day_id' => $dayId,
                         'book' => $unit['book'],
                         'chapter_number' => $unit['chapter'],
                         'verse_start' => $unit['verse_start'],
                         'verse_end' => $unit['verse_end'],
                         'order' => $order++,
-                    ]);
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
                 }
             }
+
+            foreach (array_chunk($rows, 500) as $chunk) {
+                DayChapter::insert($chunk);
+            }
         });
+    }
+
+    /**
+     * Build the days.chapters display string for a day's ordered units,
+     * mirroring DayChapterObserver: consecutive whole chapters collapse into a
+     * "Book start-end" range, and any versed chapter is a standalone token.
+     *
+     * @param  array<int, array{book:string, chapter:int, verse_start:?int, verse_end:?int, verses:int}>  $units
+     */
+    private function buildChaptersString(array $units): string
+    {
+        $groups = [];
+        $current = null;
+
+        foreach ($units as $unit) {
+            if ($unit['verse_start'] !== null) {
+                if ($current !== null) {
+                    $groups[] = $current;
+                    $current = null;
+                }
+                $groups[] = ['token' => $this->unitLabel($unit)];
+
+                continue;
+            }
+
+            if ($current === null) {
+                $current = ['book' => $unit['book'], 'start' => $unit['chapter'], 'end' => $unit['chapter']];
+            } elseif ($unit['book'] === $current['book'] && $unit['chapter'] === $current['end'] + 1) {
+                $current['end'] = $unit['chapter'];
+            } else {
+                $groups[] = $current;
+                $current = ['book' => $unit['book'], 'start' => $unit['chapter'], 'end' => $unit['chapter']];
+            }
+        }
+
+        if ($current !== null) {
+            $groups[] = $current;
+        }
+
+        $parts = [];
+        foreach ($groups as $group) {
+            if (isset($group['token'])) {
+                $parts[] = $group['token'];
+            } elseif ($group['start'] === $group['end']) {
+                $parts[] = "{$group['book']} {$group['start']}";
+            } else {
+                $parts[] = "{$group['book']} {$group['start']}-{$group['end']}";
+            }
+        }
+
+        return implode(', ', $parts);
     }
 
     /**

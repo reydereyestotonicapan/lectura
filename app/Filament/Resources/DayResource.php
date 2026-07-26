@@ -88,6 +88,7 @@ class DayResource extends Resource
                     ->defaultItems(1)
                     ->addActionLabel('Agregar capítulo')
                     ->collapsible()
+                    ->collapsed()
                     ->itemLabel(function (array $state): ?string {
                         if (empty($state['book']) || empty($state['chapter_number'])) {
                             return null;

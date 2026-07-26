@@ -98,16 +98,47 @@ class ApplyYoutubeLinks extends Command
             return self::SUCCESS;
         }
 
-        DB::transaction(function () use ($updates) {
-            foreach ($updates as $id => $url) {
-                DayChapter::whereKey($id)->update(['youtube_link' => $url]);
-            }
-        });
+        $this->applyUpdates($updates);
 
         $this->newLine();
         $this->info(sprintf('Done. Set youtube_link on %d chapters.', count($updates)));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Apply the id => url updates in a few bulk statements rather than one query
+     * per row — a single UPDATE ... CASE per chunk keeps remote (proxy) writes
+     * to a handful of round-trips instead of hundreds.
+     *
+     * @param  array<int, string>  $updates  chapter id => youtube url
+     */
+    private function applyUpdates(array $updates): void
+    {
+        $table = (new DayChapter)->getTable();
+        $now = now()->toDateTimeString();
+
+        DB::transaction(function () use ($updates, $table, $now) {
+            foreach (array_chunk($updates, 500, true) as $chunk) {
+                $cases = '';
+                $bindings = [];
+                foreach ($chunk as $id => $url) {
+                    $cases .= ' WHEN ? THEN ?';
+                    $bindings[] = $id;
+                    $bindings[] = $url;
+                }
+
+                $ids = array_keys($chunk);
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $bindings[] = $now;
+                $bindings = array_merge($bindings, $ids);
+
+                DB::update(
+                    "UPDATE {$table} SET youtube_link = CASE id{$cases} END, updated_at = ? WHERE id IN ({$placeholders})",
+                    $bindings
+                );
+            }
+        });
     }
 
     /**

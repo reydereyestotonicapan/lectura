@@ -82,10 +82,14 @@ it('lists only upcoming readings with scope=upcoming', function () {
 // GET /api/readings/progress
 // ---------------------------------------------------------------------------
 
-it('returns overall plan progress as distinct answered days over total days', function () {
-    // Three plan days; the user answered questions on two distinct days.
-    $days = Day::factory()->count(3)->create();
-    foreach ($days->take(2) as $day) {
+it('returns monthly progress with distinct answered days and current category', function () {
+    // Two reading days this month (distinct dates); user answers questions on both.
+    $days = collect([today()->startOfMonth(), today()->startOfMonth()->addDay()])
+        ->map(fn ($date) => Day::factory()->create(['date_assigned' => $date->toDateString()]));
+    // A day in the previous month should not count toward this month.
+    Day::factory()->create(['date_assigned' => today()->startOfMonth()->subDay()->toDateString()]);
+
+    foreach ($days as $day) {
         $question = Question::factory()->create(['day_id' => $day->id]);
         $answer = Answer::factory()->correct()->create(['question_id' => $question->id]);
         Response::create([
@@ -100,7 +104,12 @@ it('returns overall plan progress as distinct answered days over total days', fu
     $this->actingAs($this->user, 'sanctum')
         ->getJson('/api/readings/progress')
         ->assertStatus(200)
-        ->assertJson(['days_answered' => 2, 'total_days' => 3]);
+        ->assertJson([
+            'days_answered' => 2,
+            'days_in_month' => 2,
+            'category' => 'bronze',
+        ])
+        ->assertJsonStructure(['month', 'silver_threshold', 'gold_threshold']);
 });
 
 // ---------------------------------------------------------------------------

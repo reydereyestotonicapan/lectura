@@ -13,12 +13,18 @@ export async function getReadings(page = 1, scope: ReadingsScope = 'past'): Prom
   return data;
 }
 
-export interface PlanProgress {
+export type AwardCategory = 'bronze' | 'silver' | 'gold';
+
+export interface MonthlyProgress {
+  month: string; // "YYYY-MM"
   days_answered: number;
-  total_days: number;
+  days_in_month: number;
+  category: AwardCategory;
+  silver_threshold: number;
+  gold_threshold: number;
 }
 
-export async function getPlanProgress(): Promise<PlanProgress> {
+export async function getMonthlyProgress(): Promise<MonthlyProgress> {
   const { data } = await client.get('/readings/progress');
   return data;
 }

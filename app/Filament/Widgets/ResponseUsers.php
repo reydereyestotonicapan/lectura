@@ -4,6 +4,8 @@ namespace App\Filament\Widgets;
 
 use App\Models\Award;
 use App\Models\User;
+use App\Support\AwardCategory;
+use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -13,16 +15,15 @@ use Illuminate\Support\Facades\DB;
 class ResponseUsers extends BaseWidget
 {
     protected static ?string $heading = 'Dias contestados por usuario en el presente mes';
-    private const int MIN_SILVER_CATEGORY = 10;
-    private const int MIN_GOLD_CATEGORY = 20;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
         $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
             ? "TO_CHAR(awards.month_date, 'YYYY-MM')"
             : "DATE_FORMAT(awards.month_date, '%Y-%m')";
+
         return $table
             ->query(
                 User::query()
@@ -57,7 +58,7 @@ class ResponseUsers extends BaseWidget
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('days_count')
-                    ->label('Días respondidos')
+                    ->label('Días respondidos'),
             ])
             ->headerActions(self::isAwardingOpen() ? [
                 Tables\Actions\Action::make('sendAllAwards')
@@ -76,45 +77,47 @@ class ResponseUsers extends BaseWidget
                     ->modalDescription('Se generará y enviará un reconocimiento a cada usuario que aparece en esta tabla. ¿Deseas continuar?')
                     ->modalSubmitActionLabel('Sí, enviar todos')
                     ->action(function () {
-                        if (!self::hasPendingUsers()) {
+                        if (! self::hasPendingUsers()) {
                             return;
                         }
+                        // Pin the awarded month once for the whole batch.
+                        $month = now();
                         $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
                             ? "TO_CHAR(awards.month_date, 'YYYY-MM')"
                             : "DATE_FORMAT(awards.month_date, '%Y-%m')";
 
                         $users = User::query()
-                            ->withCount(['responses as days_count' => function ($query) {
+                            ->withCount(['responses as days_count' => function ($query) use ($month) {
                                 $query->select(DB::raw('COUNT(DISTINCT day_id)'))
-                                    ->whereHas('day', function ($dayQuery) {
-                                        $dayQuery->whereMonth('date_assigned', now()->month)
-                                            ->whereYear('date_assigned', now()->year);
+                                    ->whereHas('day', function ($dayQuery) use ($month) {
+                                        $dayQuery->whereMonth('date_assigned', $month->month)
+                                            ->whereYear('date_assigned', $month->year);
                                     });
                             }])
-                            ->whereExists(function ($query) {
+                            ->whereExists(function ($query) use ($month) {
                                 $query->select(DB::raw(1))
                                     ->from('responses')
                                     ->whereColumn('responses.user_id', 'users.id')
-                                    ->whereExists(function ($q) {
+                                    ->whereExists(function ($q) use ($month) {
                                         $q->select(DB::raw(1))
                                             ->from('days')
                                             ->whereColumn('days.id', 'responses.day_id')
-                                            ->whereMonth('date_assigned', now()->month)
-                                            ->whereYear('date_assigned', now()->year);
+                                            ->whereMonth('date_assigned', $month->month)
+                                            ->whereYear('date_assigned', $month->year);
                                     });
                             })
-                            ->whereNotExists(function ($query) use ($dateFormatSql) {
+                            ->whereNotExists(function ($query) use ($dateFormatSql, $month) {
                                 $query->select(DB::raw(1))
                                     ->from('awards')
                                     ->whereColumn('awards.user_id', 'users.id')
-                                    ->whereRaw("{$dateFormatSql} = ?", [now()->format('Y-m')]);
+                                    ->whereRaw("{$dateFormatSql} = ?", [$month->format('Y-m')]);
                             })
                             ->get();
 
                         $success = 0;
                         $failed = 0;
                         foreach ($users as $user) {
-                            self::generateAwardForUser($user) ? $success++ : $failed++;
+                            self::generateAwardForUser($user, $month) ? $success++ : $failed++;
                         }
 
                         $failed > 0
@@ -126,25 +129,25 @@ class ResponseUsers extends BaseWidget
                 Tables\Actions\Action::make('notification')
                     ->label('Generar reconocimiento')
                     ->action(function (User $user) {
-                        $award = self::generateAwardForUser($user);
-                        $award ? self::successNotification('Reconocmiento generado', 'El reconocimiento ha sido generado y enviado correctamente.') : self::errorNotification('Problemas al generar reconocimiento','Ocurrio un problema al generar el reconocimiento');
+                        $award = self::generateAwardForUser($user, now());
+                        $award ? self::successNotification('Reconocmiento generado', 'El reconocimiento ha sido generado y enviado correctamente.') : self::errorNotification('Problemas al generar reconocimiento', 'Ocurrio un problema al generar el reconocimiento');
                     }),
-            ] : [])
-            //TODO check how I can show pagination links
-            ;
+            ] : []);
+        // TODO check how I can show pagination links
     }
 
     private static function successNotification(string $title, string $body): void
     {
         Notification::make()
-        ->title($title)
-        ->success()
-        ->body($body)
-        ->color('success')
-        ->duration(8000)
-        ->send();
+            ->title($title)
+            ->success()
+            ->body($body)
+            ->color('success')
+            ->duration(8000)
+            ->send();
 
     }
+
     private static function errorNotification(string $title, string $body): void
     {
         Notification::make()
@@ -156,6 +159,7 @@ class ResponseUsers extends BaseWidget
             ->send();
 
     }
+
     private static function hasPendingUsers(): bool
     {
         $dateFormatSql = DB::connection()->getDriverName() === 'pgsql'
@@ -178,19 +182,26 @@ class ResponseUsers extends BaseWidget
             ->exists();
     }
 
-    public static function generateAwardForUser(User $user): bool
+    public static function generateAwardForUser(User $user, ?Carbon $month = null): bool
     {
+        // The month being awarded is pinned here (not read from now() deeper in
+        // the stack), so a batch that crosses midnight or a late run can't drift.
+        $month ??= now();
+
         try {
             Award::create([
                 'user_id' => $user->id,
-                'category' => $user->days_count >= self::MIN_GOLD_CATEGORY ? 'gold' : ($user->days_count >= self::MIN_SILVER_CATEGORY ? 'silver' : 'bronze'),
-                'days_count' => $user->days_count
+                'category' => AwardCategory::for($user->days_count, $month),
+                'days_count' => $user->days_count,
+                'month_date' => $month->toDateString(),
             ]);
+
             return true;
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return false;
         }
     }
+
     private static function isAwardingOpen(): bool
     {
         return app()->isLocal() || now()->isLastOfMonth();

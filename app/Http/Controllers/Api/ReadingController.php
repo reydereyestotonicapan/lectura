@@ -8,6 +8,7 @@ use App\Http\Resources\DayResource;
 use App\Models\Answer;
 use App\Models\Day;
 use App\Models\Response;
+use App\Support\AwardCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -48,19 +49,37 @@ class ReadingController extends Controller
     }
 
     /**
-     * Overall reading-plan progress for the authenticated user: the number of
-     * distinct days they have answered (matching the awards' days_count) out of
-     * the total number of days in the plan.
+     * Monthly recognition progress for the authenticated user: distinct days
+     * answered this month (matching the awards' days_count) out of the reading
+     * days in the month, plus the current category and its thresholds — the same
+     * category the user will receive in their monthly recognition. Resets each
+     * month.
      */
     public function progress(Request $request): JsonResponse
     {
+        $month = now();
+
         $daysAnswered = Response::where('user_id', $request->user()->id)
+            ->whereHas('day', function ($q) use ($month) {
+                $q->whereMonth('date_assigned', $month->month)
+                    ->whereYear('date_assigned', $month->year);
+            })
             ->distinct()
             ->count('day_id');
 
+        $daysInMonth = Day::whereMonth('date_assigned', $month->month)
+            ->whereYear('date_assigned', $month->year)
+            ->count();
+
+        $thresholds = AwardCategory::thresholds($month);
+
         return response()->json([
+            'month' => $month->format('Y-m'),
             'days_answered' => $daysAnswered,
-            'total_days' => Day::count(),
+            'days_in_month' => $daysInMonth,
+            'category' => AwardCategory::for($daysAnswered, $month),
+            'silver_threshold' => $thresholds['silver'],
+            'gold_threshold' => $thresholds['gold'],
         ]);
     }
 

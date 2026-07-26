@@ -3,9 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme, Radii, Spacing, createShadows } from '../theme';
 import { Day } from '../types/api';
+import { MonthlyProgress } from '../api/readings';
 import { ChapterWithProgress } from '../types/chapter';
 import ChapterListItem from './ChapterListItem';
-import ProgressBar from './ProgressBar';
+import MonthlyProgressCard from './MonthlyProgressCard';
 import SectionHeader from './ui/SectionHeader';
 import AnimatedFade from './ui/AnimatedFade';
 
@@ -22,8 +23,8 @@ interface Props {
   chapters: ChapterWithProgress[];
   isLoadingChapters: boolean;
   chapterError: string | null;
-  /** Overall reading-plan progress (days answered / total plan days). */
-  planProgress?: { daysAnswered: number; totalDays: number } | null;
+  /** This month's recognition progress (days answered + current category). */
+  monthlyProgress?: MonthlyProgress | null;
   /** When true the copy is phrased for the current day ("Capítulos de hoy"). */
   isToday?: boolean;
   onToggle: (chapterId: number) => void;
@@ -42,7 +43,7 @@ export default function DayReadingBody({
   chapters,
   isLoadingChapters,
   chapterError,
-  planProgress,
+  monthlyProgress,
   isToday = false,
   onToggle,
   onRead,
@@ -66,17 +67,10 @@ export default function DayReadingBody({
         </LinearGradient>
       </AnimatedFade>
 
-      {/* Overall reading-plan progress (days answered across the whole plan) */}
-      {planProgress && planProgress.totalDays > 0 && (
+      {/* Monthly recognition progress (days answered this month + category) */}
+      {monthlyProgress && (
         <AnimatedFade delay={80}>
-          <View style={[styles.progressCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
-            <Text style={[styles.planTitle, { color: colors.textMuted }]}>Plan de lectura</Text>
-            <ProgressBar
-              progressCount={planProgress.daysAnswered}
-              totalCount={planProgress.totalDays}
-              label={`${planProgress.daysAnswered} de ${planProgress.totalDays} días respondidos`}
-            />
-          </View>
+          <MonthlyProgressCard progress={monthlyProgress} />
         </AnimatedFade>
       )}
 
@@ -163,22 +157,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
-  },
-
-  // Progress card
-  progressCard: {
-    marginHorizontal: Spacing.base,
-    marginTop: 16,
-    borderRadius: Radii.xl,
-    padding: 16,
-    borderWidth: 1,
-  },
-  planTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
   },
 
   // Chapters section

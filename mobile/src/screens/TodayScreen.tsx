@@ -14,6 +14,7 @@ import { useChapterProgress } from '../hooks/useChapterProgress';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { useAuth } from '../auth/AuthContext';
 import { useReadingActions } from '../hooks/useReadingActions';
+import { usePlanProgress } from '../hooks/usePlanProgress';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'Today'>;
 
@@ -30,6 +31,7 @@ export default function TodayScreen({ navigation }: Props) {
     useChapterProgress(day?.id ?? null);
   const { isGuest, exitGuestMode } = useAuth();
   const { settings, refreshSettings } = useUserSettings();
+  const { planProgress, refreshPlanProgress } = usePlanProgress();
 
   const { handleRead, handleWatch, handleToggle } = useReadingActions({
     bibleSource: settings.bible_source,
@@ -67,7 +69,8 @@ export default function TodayScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
       refreshSettings();
-    }, [refreshSettings])
+      refreshPlanProgress();
+    }, [refreshSettings, refreshPlanProgress])
   );
 
   const appStateRef = useRef(AppState.currentState);
@@ -89,13 +92,13 @@ export default function TodayScreen({ navigation }: Props) {
         setError(null);
         setNotFound(false);
         lastRefreshRef.current = Date.now();
-        await Promise.all([refreshProgress(), refreshSettings()]);
+        await Promise.all([refreshProgress(), refreshSettings(), refreshPlanProgress()]);
       } catch (err: any) {
         if (err.response?.status === 404) setNotFound(true);
         else if (!silent) setError('No se pudo cargar la lectura. Verifica tu conexión.');
       }
     },
-    [refreshProgress, refreshSettings]
+    [refreshProgress, refreshSettings, refreshPlanProgress]
   );
 
   const load = useCallback(async () => {
@@ -184,6 +187,7 @@ export default function TodayScreen({ navigation }: Props) {
         chapters={chapters}
         isLoadingChapters={isLoadingChapters}
         chapterError={chapterError}
+        planProgress={planProgress}
         isToday
         onToggle={handleToggle}
         onRead={handleRead}

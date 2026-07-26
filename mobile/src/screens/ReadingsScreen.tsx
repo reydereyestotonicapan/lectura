@@ -4,7 +4,7 @@ import { useTheme, Radii, Spacing, createShadows } from '../theme';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
-import { getReadings } from '../api/readings';
+import { getReadings, ReadingsScope } from '../api/readings';
 import { Day } from '../types/api';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
@@ -68,6 +68,7 @@ function DayCard({ day, onPress, index }: { day: Day; onPress: () => void; index
 
 export default function ReadingsScreen({ navigation }: Props) {
   const { colors } = useTheme();
+  const [scope, setScope] = useState<ReadingsScope>('past');
   const [days, setDays] = useState<Day[]>([]);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
@@ -77,14 +78,14 @@ export default function ReadingsScreen({ navigation }: Props) {
 
   const loadPage = useCallback(async (p: number) => {
     try {
-      const data = await getReadings(p);
+      const data = await getReadings(p, scope);
       if (p === 1) setDays(data.data);
       else setDays((prev) => [...prev, ...data.data]);
       setLastPage(data.meta.last_page);
     } catch {
       if (p === 1) setError('No se pudieron cargar las lecturas.');
     }
-  }, []);
+  }, [scope]);
 
   const init = useCallback(async () => {
     setIsLoading(true);
@@ -94,6 +95,7 @@ export default function ReadingsScreen({ navigation }: Props) {
     setIsLoading(false);
   }, [loadPage]);
 
+  // Runs on mount and whenever the scope (Anteriores / Próximas) changes.
   useEffect(() => { init(); }, [init]);
 
   useFocusEffect(
@@ -110,41 +112,73 @@ export default function ReadingsScreen({ navigation }: Props) {
     setIsFetchingMore(false);
   };
 
-  if (isLoading) {
+  const segments: { value: ReadingsScope; label: string }[] = [
+    { value: 'past', label: 'Anteriores' },
+    { value: 'upcoming', label: 'Próximas' },
+  ];
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.gold} />
+        </View>
+      );
+    }
+    if (error) return <ErrorState message={error} onRetry={init} />;
+    if (days.length === 0) {
+      return scope === 'upcoming' ? (
+        <EmptyState icon="🌱" message="No hay próximas lecturas" detail="Ya estás al día con el plan." />
+      ) : (
+        <EmptyState icon="📅" message="Sin lecturas disponibles" detail="Vuelve más tarde." />
+      );
+    }
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.gold} />
-      </View>
+      <FlatList
+        data={days}
+        keyExtractor={(d) => String(d.id)}
+        contentContainerStyle={styles.list}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <Text style={[styles.header, { color: colors.textMuted }]}>Toca un día para leer o responder</Text>
+        }
+        ListFooterComponent={
+          isFetchingMore ? <ActivityIndicator color={colors.gold} style={styles.footer} /> : null
+        }
+        renderItem={({ item, index }) => (
+          <DayCard
+            day={item}
+            index={index}
+            onPress={() => navigation.navigate('ReadingDetail', { dayId: item.id })}
+          />
+        )}
+      />
     );
-  }
-  if (error) return <ErrorState message={error} onRetry={init} />;
-  if (days.length === 0) {
-    return <EmptyState icon="📅" message="Sin lecturas disponibles" detail="Vuelve más tarde." />;
-  }
+  };
 
   return (
-    <FlatList
-      style={[styles.root, { backgroundColor: colors.background }]}
-      data={days}
-      keyExtractor={(d) => String(d.id)}
-      contentContainerStyle={styles.list}
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.3}
-      showsVerticalScrollIndicator={false}
-      ListHeaderComponent={
-        <Text style={[styles.header, { color: colors.textMuted }]}>Selecciona un día para leer o responder</Text>
-      }
-      ListFooterComponent={
-        isFetchingMore ? <ActivityIndicator color={colors.gold} style={styles.footer} /> : null
-      }
-      renderItem={({ item, index }) => (
-        <DayCard
-          day={item}
-          index={index}
-          onPress={() => navigation.navigate('ReadingDetail', { dayId: item.id })}
-        />
-      )}
-    />
+    <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <View style={[styles.segment, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {segments.map(({ value, label }) => {
+          const active = scope === value;
+          return (
+            <TouchableOpacity
+              key={value}
+              style={[styles.segmentBtn, active && { backgroundColor: colors.gold }]}
+              onPress={() => setScope(value)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+            >
+              <Text style={[styles.segmentText, { color: active ? '#fff' : colors.textMuted }]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {renderContent()}
+    </View>
   );
 }
 
@@ -152,6 +186,27 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   list: { padding: Spacing.base, paddingBottom: 32 },
+
+  // Anteriores / Próximas segmented control
+  segment: {
+    flexDirection: 'row',
+    margin: Spacing.base,
+    marginBottom: 4,
+    padding: 4,
+    borderRadius: Radii.lg,
+    borderWidth: 1,
+    gap: 4,
+  },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: Radii.md,
+    alignItems: 'center',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
   footer: { marginVertical: 16 },
   header: {
     fontSize: 13,

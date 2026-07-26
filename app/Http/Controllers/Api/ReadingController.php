@@ -31,13 +31,37 @@ class ReadingController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $days = Day::where('date_assigned', '<=', today())
+        // scope=upcoming lists future readings (soonest first) so users can read
+        // ahead; the default (past) keeps today and earlier, newest first.
+        $upcoming = $request->query('scope') === 'upcoming';
+
+        $days = Day::query()
+            ->when($upcoming,
+                fn ($q) => $q->where('date_assigned', '>', today())->orderBy('date_assigned'),
+                fn ($q) => $q->where('date_assigned', '<=', today())->orderByDesc('date_assigned'),
+            )
             ->withCount('questions')
             ->withCount($this->answeredCountScope($request->user()->id))
-            ->orderByDesc('date_assigned')
             ->paginate(20);
 
         return DayResource::collection($days);
+    }
+
+    /**
+     * Overall reading-plan progress for the authenticated user: the number of
+     * distinct days they have answered (matching the awards' days_count) out of
+     * the total number of days in the plan.
+     */
+    public function progress(Request $request): JsonResponse
+    {
+        $daysAnswered = Response::where('user_id', $request->user()->id)
+            ->distinct()
+            ->count('day_id');
+
+        return response()->json([
+            'days_answered' => $daysAnswered,
+            'total_days' => Day::count(),
+        ]);
     }
 
     public function show(Day $day): DayResource

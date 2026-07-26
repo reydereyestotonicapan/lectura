@@ -22,6 +22,8 @@ interface Props {
   chapters: ChapterWithProgress[];
   isLoadingChapters: boolean;
   chapterError: string | null;
+  /** Overall reading-plan progress (days answered / total plan days). */
+  planProgress?: { daysAnswered: number; totalDays: number } | null;
   /** When true the copy is phrased for the current day ("Capítulos de hoy"). */
   isToday?: boolean;
   onToggle: (chapterId: number) => void;
@@ -40,6 +42,7 @@ export default function DayReadingBody({
   chapters,
   isLoadingChapters,
   chapterError,
+  planProgress,
   isToday = false,
   onToggle,
   onRead,
@@ -49,7 +52,6 @@ export default function DayReadingBody({
   const { colors, gradients, isDark } = useTheme();
   const shadows = createShadows(isDark);
 
-  const readCount = chapters.filter((c) => c.is_read).length;
   const totalChapters = chapters.length;
   const totalQuestions = day.questions?.length ?? day.questions_count ?? 0;
   const alreadyAnswered = (day.answered_count ?? 0) >= totalQuestions && totalQuestions > 0;
@@ -64,11 +66,16 @@ export default function DayReadingBody({
         </LinearGradient>
       </AnimatedFade>
 
-      {/* Reading progress */}
-      {!isLoadingChapters && totalChapters > 0 && (
+      {/* Overall reading-plan progress (days answered across the whole plan) */}
+      {planProgress && planProgress.totalDays > 0 && (
         <AnimatedFade delay={80}>
           <View style={[styles.progressCard, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
-            <ProgressBar progressCount={readCount} totalCount={totalChapters} />
+            <Text style={[styles.planTitle, { color: colors.textMuted }]}>Plan de lectura</Text>
+            <ProgressBar
+              progressCount={planProgress.daysAnswered}
+              totalCount={planProgress.totalDays}
+              label={`${planProgress.daysAnswered} de ${planProgress.totalDays} días respondidos`}
+            />
           </View>
         </AnimatedFade>
       )}
@@ -165,6 +172,13 @@ const styles = StyleSheet.create({
     borderRadius: Radii.xl,
     padding: 16,
     borderWidth: 1,
+  },
+  planTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
   },
 
   // Chapters section

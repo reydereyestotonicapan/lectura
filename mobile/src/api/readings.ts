@@ -6,8 +6,20 @@ export async function getToday(): Promise<Day> {
   return data.data;
 }
 
-export async function getReadings(page = 1): Promise<PaginatedResponse<Day>> {
-  const { data } = await client.get('/readings', { params: { page } });
+export type ReadingsScope = 'past' | 'upcoming';
+
+export async function getReadings(page = 1, scope: ReadingsScope = 'past'): Promise<PaginatedResponse<Day>> {
+  const { data } = await client.get('/readings', { params: { page, scope } });
+  return data;
+}
+
+export interface PlanProgress {
+  days_answered: number;
+  total_days: number;
+}
+
+export async function getPlanProgress(): Promise<PlanProgress> {
+  const { data } = await client.get('/readings/progress');
   return data;
 }
 

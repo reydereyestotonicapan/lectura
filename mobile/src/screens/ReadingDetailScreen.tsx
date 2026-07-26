@@ -13,6 +13,7 @@ import { useChapterProgress } from '../hooks/useChapterProgress';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { useAuth } from '../auth/AuthContext';
 import { useReadingActions } from '../hooks/useReadingActions';
+import { usePlanProgress } from '../hooks/usePlanProgress';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'ReadingDetail'>;
 
@@ -38,6 +39,7 @@ export default function ReadingDetailScreen({ route, navigation }: Props) {
     useChapterProgress(dayId);
   const { isGuest, exitGuestMode } = useAuth();
   const { settings } = useUserSettings();
+  const { planProgress, refreshPlanProgress } = usePlanProgress();
 
   const { handleRead, handleWatch, handleToggle } = useReadingActions({
     bibleSource: settings.bible_source,
@@ -53,14 +55,14 @@ export default function ReadingDetailScreen({ route, navigation }: Props) {
         const data = await getReading(dayId);
         setDay(data);
         setError(null);
-        await refreshProgress();
+        await Promise.all([refreshProgress(), refreshPlanProgress()]);
       } catch {
         if (!silent) setError('No se pudo cargar la lectura. Verifica tu conexión.');
       } finally {
         if (!silent) setIsLoading(false);
       }
     },
-    [dayId, refreshProgress]
+    [dayId, refreshProgress, refreshPlanProgress]
   );
 
   useEffect(() => {
@@ -115,6 +117,7 @@ export default function ReadingDetailScreen({ route, navigation }: Props) {
         chapters={chapters}
         isLoadingChapters={isLoadingChapters}
         chapterError={chapterError}
+        planProgress={planProgress}
         onToggle={handleToggle}
         onRead={handleRead}
         onWatch={handleWatch}

@@ -65,6 +65,44 @@ it('returns a paginated list of days', function () {
         ->assertJsonStructure(['data', 'meta']);
 });
 
+it('lists only upcoming readings with scope=upcoming', function () {
+    $past = Day::factory()->create(['date_assigned' => now()->subDays(3)->toDateString()]);
+    $today = Day::factory()->create(['date_assigned' => today()->toDateString()]);
+    $future = Day::factory()->create(['date_assigned' => now()->addDays(3)->toDateString()]);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings?scope=upcoming')
+        ->assertStatus(200)
+        ->assertJsonFragment(['id' => $future->id])
+        ->assertJsonMissing(['id' => $past->id])
+        ->assertJsonMissing(['id' => $today->id]);
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/readings/progress
+// ---------------------------------------------------------------------------
+
+it('returns overall plan progress as distinct answered days over total days', function () {
+    // Three plan days; the user answered questions on two distinct days.
+    $days = Day::factory()->count(3)->create();
+    foreach ($days->take(2) as $day) {
+        $question = Question::factory()->create(['day_id' => $day->id]);
+        $answer = Answer::factory()->correct()->create(['question_id' => $question->id]);
+        Response::create([
+            'user_id' => $this->user->id,
+            'day_id' => $day->id,
+            'question_id' => $question->id,
+            'answer_id' => $answer->id,
+            'status' => StatusResponse::EXPECTED,
+        ]);
+    }
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings/progress')
+        ->assertStatus(200)
+        ->assertJson(['days_answered' => 2, 'total_days' => 3]);
+});
+
 // ---------------------------------------------------------------------------
 // GET /api/readings/{day}
 // ---------------------------------------------------------------------------

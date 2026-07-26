@@ -1,8 +1,10 @@
 <?php
 
+use App\Constants\StatusResponse;
 use App\Models\Answer;
 use App\Models\Day;
 use App\Models\Question;
+use App\Models\Response;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -11,7 +13,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     config(['app.default_user_role' => null]); // role doesn't exist in test DB
     $this->user = User::factory()->create([
-        'name'  => 'Test User',
+        'name' => 'Test User',
         'email' => 'test@example.com',
     ]);
 });
@@ -33,7 +35,7 @@ it('returns 404 when there is no reading assigned for today', function () {
 });
 
 it('returns today\'s reading with questions and answers (no is_correct)', function () {
-    $day      = Day::factory()->today()->create();
+    $day = Day::factory()->today()->create();
     $question = Question::factory()->create(['day_id' => $day->id]);
     Answer::factory()->correct()->create(['question_id' => $question->id]);
     Answer::factory()->create(['question_id' => $question->id]);
@@ -76,6 +78,27 @@ it('returns a single day by id', function () {
         ->assertJsonFragment(['id' => $day->id]);
 });
 
+it('includes questions_count and answered_count on a single day', function () {
+    $day = Day::factory()->create();
+    $q1 = Question::factory()->create(['day_id' => $day->id]);
+    Question::factory()->create(['day_id' => $day->id]);
+    $answer = Answer::factory()->correct()->create(['question_id' => $q1->id]);
+
+    // User has answered one of the two questions.
+    Response::create([
+        'user_id' => $this->user->id,
+        'day_id' => $day->id,
+        'question_id' => $q1->id,
+        'answer_id' => $answer->id,
+        'status' => StatusResponse::EXPECTED,
+    ]);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson("/api/readings/{$day->id}")
+        ->assertStatus(200)
+        ->assertJsonFragment(['questions_count' => 2, 'answered_count' => 1]);
+});
+
 it('returns 404 for a non-existent day', function () {
     $this->actingAs($this->user, 'sanctum')
         ->getJson('/api/readings/9999')
@@ -87,7 +110,7 @@ it('returns 404 for a non-existent day', function () {
 // ---------------------------------------------------------------------------
 
 it('returns questions for a day without is_correct', function () {
-    $day      = Day::factory()->create();
+    $day = Day::factory()->create();
     $question = Question::factory()->create(['day_id' => $day->id]);
     Answer::factory()->correct()->create(['question_id' => $question->id]);
 

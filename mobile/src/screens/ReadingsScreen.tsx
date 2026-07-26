@@ -132,7 +132,7 @@ export default function ReadingsScreen({ navigation }: Props) {
       onEndReachedThreshold={0.3}
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={
-        <Text style={[styles.header, { color: colors.textMuted }]}>Selecciona un día para responder</Text>
+        <Text style={[styles.header, { color: colors.textMuted }]}>Selecciona un día para leer o responder</Text>
       }
       ListFooterComponent={
         isFetchingMore ? <ActivityIndicator color={colors.gold} style={styles.footer} /> : null
@@ -141,7 +141,7 @@ export default function ReadingsScreen({ navigation }: Props) {
         <DayCard
           day={item}
           index={index}
-          onPress={() => navigation.navigate('Quiz', { dayId: item.id })}
+          onPress={() => navigation.navigate('ReadingDetail', { dayId: item.id })}
         />
       )}
     />

@@ -17,7 +17,9 @@ use Filament\Tables\Table;
 class DayResource extends Resource
 {
     protected static ?string $model = Day::class;
+
     protected static ?string $modelLabel = 'Pregunta';
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 
     public static function form(Form $form): Form
@@ -66,6 +68,16 @@ class DayResource extends Resource
                             ->numeric()
                             ->required()
                             ->minValue(1),
+                        Forms\Components\TextInput::make('verse_start')
+                            ->label('Versículo inicial')
+                            ->numeric()
+                            ->minValue(1)
+                            ->helperText('Dejar vacío para el capítulo completo.'),
+                        Forms\Components\TextInput::make('verse_end')
+                            ->label('Versículo final')
+                            ->numeric()
+                            ->minValue(1)
+                            ->helperText('Dejar vacío para el capítulo completo.'),
                         Forms\Components\TextInput::make('youtube_link')
                             ->label('Enlace de YouTube')
                             ->url()
@@ -76,11 +88,22 @@ class DayResource extends Resource
                     ->defaultItems(1)
                     ->addActionLabel('Agregar capítulo')
                     ->collapsible()
-                    ->itemLabel(fn (array $state): ?string =>
-                        $state['book'] && $state['chapter_number']
-                            ? "{$state['book']} {$state['chapter_number']}"
-                            : null
-                    )
+                    ->itemLabel(function (array $state): ?string {
+                        if (empty($state['book']) || empty($state['chapter_number'])) {
+                            return null;
+                        }
+
+                        $label = "{$state['book']} {$state['chapter_number']}";
+
+                        if (! empty($state['verse_start'])) {
+                            $label .= ':'.$state['verse_start'];
+                            if (! empty($state['verse_end']) && $state['verse_end'] != $state['verse_start']) {
+                                $label .= '-'.$state['verse_end'];
+                            }
+                        }
+
+                        return $label;
+                    })
                     ->columnSpanFull(),
             ]);
     }
@@ -107,14 +130,13 @@ class DayResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('date_assigned', 'desc')
-            ;
+            ->defaultSort('date_assigned', 'desc');
     }
 
     public static function getRelations(): array
     {
         return [
-            QuestionsRelationManager::class
+            QuestionsRelationManager::class,
         ];
     }
 

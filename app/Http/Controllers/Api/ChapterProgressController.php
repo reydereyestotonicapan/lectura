@@ -39,17 +39,19 @@ class ChapterProgressController extends Controller
         $chapters = $user
             ? $day->getProgressForUser($user->id)
             : $day->dayChapters()->orderBy('order')->get()->map(fn ($chapter) => (object) [
-                'id'                   => $chapter->id,
-                'day_id'               => $chapter->day_id,
-                'book'                 => $chapter->book,
-                'chapter_number'       => $chapter->chapter_number,
-                'order'                => $chapter->order,
-                'display_name'         => $chapter->display_name,
+                'id' => $chapter->id,
+                'day_id' => $chapter->day_id,
+                'book' => $chapter->book,
+                'chapter_number' => $chapter->chapter_number,
+                'verse_start' => $chapter->verse_start,
+                'verse_end' => $chapter->verse_end,
+                'order' => $chapter->order,
+                'display_name' => $chapter->display_name,
                 'youversion_reference' => $chapter->youversion_reference,
-                'biblegateway_url'     => $chapter->biblegateway_url,
-                'youtube_link'         => $chapter->youtube_link,
-                'is_read'              => false,
-                'read_at'              => null,
+                'biblegateway_url' => $chapter->biblegateway_url,
+                'youtube_link' => $chapter->youtube_link,
+                'is_read' => false,
+                'read_at' => null,
             ]);
 
         $progressCount = $chapters->filter(fn ($chapter) => $chapter->is_read)->count();

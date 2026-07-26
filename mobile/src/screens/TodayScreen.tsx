@@ -164,7 +164,13 @@ export default function TodayScreen({ navigation }: Props) {
   const handleReadChapter = useCallback(
     async (chapter: ChapterWithProgress) => {
       try {
-        await openChapter(chapter.book, chapter.chapter_number, settings.bible_source);
+        await openChapter(
+          chapter.book,
+          chapter.chapter_number,
+          settings.bible_source,
+          chapter.verse_start,
+          chapter.verse_end
+        );
         if (!chapter.is_read && !isGuest) toggleChapter(chapter.id);
       } catch {
         Alert.alert('Error', 'No se pudo abrir el capítulo. Intenta de nuevo.');

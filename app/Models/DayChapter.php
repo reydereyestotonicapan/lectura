@@ -99,6 +99,8 @@ class DayChapter extends Model
         'day_id',
         'book',
         'chapter_number',
+        'verse_start',
+        'verse_end',
         'order',
         'youtube_link',
     ];
@@ -110,6 +112,8 @@ class DayChapter extends Model
      */
     protected $casts = [
         'chapter_number' => 'integer',
+        'verse_start' => 'integer',
+        'verse_end' => 'integer',
         'order' => 'integer',
     ];
 
@@ -141,34 +145,58 @@ class DayChapter extends Model
     }
 
     /**
-     * Get the display name for the chapter (e.g., "Romanos 8").
+     * Get the suffix describing the verse range, if any.
+     *
+     * Returns "" for a whole chapter, ".5" (dot) or ":5" (colon) style suffixes
+     * for a single verse, and "1-80" style for a range. The $separator lets each
+     * link format request its own joiner (YouVersion uses ".", BibleGateway ":").
+     */
+    protected function verseSuffix(string $separator): string
+    {
+        if ($this->verse_start === null) {
+            return '';
+        }
+
+        if ($this->verse_end === null || $this->verse_end === $this->verse_start) {
+            return "{$separator}{$this->verse_start}";
+        }
+
+        return "{$separator}{$this->verse_start}-{$this->verse_end}";
+    }
+
+    /**
+     * Get the display name for the chapter.
+     * Whole chapter: "Romanos 8". Verse range: "Salmos 119:1-80".
      */
     public function getDisplayNameAttribute(): string
     {
-        return "{$this->book} {$this->chapter_number}";
+        return "{$this->book} {$this->chapter_number}".$this->verseSuffix(':');
     }
 
     /**
      * Get the YouVersion deep link reference for this chapter.
-     * Format: youversion://bible?reference={bookCode}.{chapter}&version=176
+     * Whole:  youversion://bible?reference=NUM.5&version=176
+     * Verses: youversion://bible?reference=PSA.119.1-80&version=176
      */
     public function getYouVersionReferenceAttribute(): string
     {
         $bookCode = self::BIBLE_BOOK_CODES[$this->book] ?? 'GEN';
         $versionCode = self::YOUVERSION_VERSION_CODE;
+        $reference = "{$bookCode}.{$this->chapter_number}".$this->verseSuffix('.');
 
-        return "youversion://bible?reference={$bookCode}.{$this->chapter_number}&version={$versionCode}";
+        return "youversion://bible?reference={$reference}&version={$versionCode}";
     }
 
     /**
      * Get the BibleGateway URL for this chapter.
-     * Format: https://www.biblegateway.com/passage/?search={book}%20{chapter}&version=TLA
+     * Whole:  https://www.biblegateway.com/passage/?search=N%C3%BAmeros%205&version=TLA
+     * Verses: https://www.biblegateway.com/passage/?search=Salmos%20119%3A1-80&version=TLA
      */
     public function getBibleGatewayUrlAttribute(): string
     {
-        $encodedBook = urlencode($this->book);
+        $search = rawurlencode("{$this->book} {$this->chapter_number}".$this->verseSuffix(':'));
 
-        return "https://www.biblegateway.com/passage/?search={$encodedBook}%20{$this->chapter_number}&version=TLA";
+        return "https://www.biblegateway.com/passage/?search={$search}&version=TLA";
     }
 
     /**

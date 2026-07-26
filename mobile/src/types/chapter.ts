@@ -83,6 +83,8 @@ export interface DayChapter {
   book: string;
   book_code: BibleBookCode;
   chapter_number: number;
+  verse_start: number | null;
+  verse_end: number | null;
   order: number;
   display_name: string;
   youversion_reference: string;

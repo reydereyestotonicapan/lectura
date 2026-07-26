@@ -84,12 +84,27 @@ class DayChapterObserver
             return;
         }
 
-        // Group consecutive chapters by book
+        // Group consecutive whole chapters by book. Chapters that carry a
+        // verse range (verse_start !== null) never merge into a run — they are
+        // emitted as standalone tokens (e.g. "Salmos 119:1-80").
         $groups = [];
         $currentGroup = null;
 
         foreach ($chapters as $chapter) {
-            if ($currentGroup === null) {
+            $isVersed = $chapter->verse_start !== null;
+
+            if ($isVersed) {
+                // Flush any open run, then add the versed chapter on its own.
+                if ($currentGroup !== null) {
+                    $groups[] = $currentGroup;
+                    $currentGroup = null;
+                }
+                $groups[] = ['token' => $chapter->display_name];
+
+                continue;
+            }
+
+            if ($currentGroup === null || ! isset($currentGroup['book'])) {
                 // Start first group
                 $currentGroup = [
                     'book' => $chapter->book,
@@ -121,7 +136,10 @@ class DayChapterObserver
         // Format groups into string parts
         $parts = [];
         foreach ($groups as $group) {
-            if ($group['start'] === $group['end']) {
+            if (isset($group['token'])) {
+                // Standalone versed chapter, already formatted.
+                $parts[] = $group['token'];
+            } elseif ($group['start'] === $group['end']) {
                 // Single chapter: "Book Chapter"
                 $parts[] = "{$group['book']} {$group['start']}";
             } else {

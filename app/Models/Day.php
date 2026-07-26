@@ -55,6 +55,8 @@ class Day extends Model
                     'day_id' => $chapter->day_id,
                     'book' => $chapter->book,
                     'chapter_number' => $chapter->chapter_number,
+                    'verse_start' => $chapter->verse_start,
+                    'verse_end' => $chapter->verse_end,
                     'order' => $chapter->order,
                     'display_name' => $chapter->display_name,
                     'youversion_reference' => $chapter->youversion_reference,

@@ -3,13 +3,14 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 
 class SyncProdToStage extends Command
 {
-    protected $signature = 'db:sync-from-prod';
+    protected $signature = 'db:sync-from-prod {--fresh : Wipe the stage tables first so it becomes an exact copy of prod}';
 
-    protected $description = 'Copy new records from lectura-prod-db to lectura-stage-db (insert only, never overwrites)';
+    protected $description = 'Copy records from lectura-prod-db to lectura-stage-db (insert only by default; use --fresh for an exact clean copy)';
 
     /**
      * Tables to sync in dependency order (parents before children).
@@ -38,16 +39,28 @@ class SyncProdToStage extends Command
     {
         if (! config('database.connections.pgsql_prod.url')) {
             $this->error('PROD_DB_URL is not set in your .env file.');
+
             return self::FAILURE;
         }
 
         if (! config('database.connections.pgsql_stage.url')) {
             $this->error('STAGE_DB_URL is not set in your .env file.');
+
             return self::FAILURE;
         }
 
-        $prod  = DB::connection('pgsql_prod');
+        $prod = DB::connection('pgsql_prod');
         $stage = DB::connection('pgsql_stage');
+
+        if ($this->option('fresh')) {
+            if (! $this->confirm('This will WIPE all synced tables in STAGE and replace them with an exact copy of PROD. Continue?', false)) {
+                $this->warn('Aborted.');
+
+                return self::FAILURE;
+            }
+
+            $this->truncateStage($stage);
+        }
 
         $totalInserted = 0;
 
@@ -57,7 +70,8 @@ class SyncProdToStage extends Command
             $rows = $prod->table($table)->get()->toArray();
 
             if (empty($rows)) {
-                $this->line("  → 0 rows in prod, skipped.");
+                $this->line('  → 0 rows in prod, skipped.');
+
                 continue;
             }
 
@@ -69,12 +83,12 @@ class SyncProdToStage extends Command
             $hasPrimaryKey = array_key_exists('id', $rows[0]);
 
             $inserted = 0;
-            $chunks   = array_chunk($rows, 200);
+            $chunks = array_chunk($rows, 200);
 
             foreach ($chunks as $chunk) {
                 if ($hasPrimaryKey) {
-                    $ids            = array_column($chunk, 'id');
-                    $existingIds    = $stage->table($table)
+                    $ids = array_column($chunk, 'id');
+                    $existingIds = $stage->table($table)
                         ->whereIn('id', $ids)
                         ->pluck('id')
                         ->flip()
@@ -93,7 +107,7 @@ class SyncProdToStage extends Command
                     $stage->table($table)->insertOrIgnore(array_values($newRows));
                     $inserted += count($newRows);
                 } catch (\Throwable $e) {
-                    $this->warn("  ⚠ Error on {$table}: " . $e->getMessage());
+                    $this->warn("  ⚠ Error on {$table}: ".$e->getMessage());
                 }
             }
 
@@ -110,7 +124,25 @@ class SyncProdToStage extends Command
         return self::SUCCESS;
     }
 
-    private function resetSequences(\Illuminate\Database\Connection $stage): void
+    private function truncateStage(Connection $stage): void
+    {
+        $this->info('Wiping stage tables for a clean copy...');
+
+        // Quote each table and truncate them all together. RESTART IDENTITY
+        // resets sequences; CASCADE also clears any table with an FK into these.
+        $quoted = implode(', ', array_map(fn ($t) => "\"{$t}\"", $this->tables));
+
+        try {
+            $stage->statement("TRUNCATE TABLE {$quoted} RESTART IDENTITY CASCADE");
+            $this->line('  → stage tables truncated.');
+        } catch (\Throwable $e) {
+            $this->warn('  ⚠ Truncate failed: '.$e->getMessage());
+        }
+
+        $this->newLine();
+    }
+
+    private function resetSequences(Connection $stage): void
     {
         $this->info('Resetting sequences...');
 

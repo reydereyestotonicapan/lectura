@@ -18,6 +18,15 @@ function formatDate(dateStr: string) {
   });
 }
 
+export interface DayNav {
+  onPrev: () => void;
+  onNext: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+  onToday: () => void;
+  isToday: boolean;
+}
+
 interface Props {
   day: Day;
   chapters: ChapterWithProgress[];
@@ -25,6 +34,8 @@ interface Props {
   chapterError: string | null;
   /** This month's recognition progress (days answered + current category). */
   monthlyProgress?: MonthlyProgress | null;
+  /** When provided, renders prev/next day arrows + a "Hoy" reset in the hero. */
+  nav?: DayNav;
   /** When true the copy is phrased for the current day ("Capítulos de hoy"). */
   isToday?: boolean;
   onToggle: (chapterId: number) => void;
@@ -44,6 +55,7 @@ export default function DayReadingBody({
   isLoadingChapters,
   chapterError,
   monthlyProgress,
+  nav,
   isToday = false,
   onToggle,
   onRead,
@@ -59,11 +71,47 @@ export default function DayReadingBody({
 
   return (
     <>
-      {/* Date hero */}
+      {/* Date hero (with optional prev/next day navigation) */}
       <AnimatedFade delay={0}>
         <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-          <Text style={styles.heroDate}>{formatDate(day.date_assigned)}</Text>
-          {day.day_month ? <Text style={styles.heroLabel}>{day.day_month}</Text> : null}
+          {nav ? (
+            <View style={styles.heroNavRow}>
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={nav.onPrev}
+                disabled={!nav.canPrev}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel="Día anterior"
+              >
+                <Text style={[styles.navChevron, !nav.canPrev && styles.navDisabled]}>‹</Text>
+              </TouchableOpacity>
+
+              <View style={styles.heroCenter}>
+                <Text style={[styles.heroDate, styles.heroDateCentered]}>{formatDate(day.date_assigned)}</Text>
+                {day.day_month ? <Text style={styles.heroLabel}>{day.day_month}</Text> : null}
+                {!nav.isToday ? (
+                  <TouchableOpacity style={styles.todayPill} onPress={nav.onToday} accessibilityLabel="Volver a hoy">
+                    <Text style={styles.todayPillText}>Hoy</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              <TouchableOpacity
+                style={styles.navBtn}
+                onPress={nav.onNext}
+                disabled={!nav.canNext}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel="Día siguiente"
+              >
+                <Text style={[styles.navChevron, !nav.canNext && styles.navDisabled]}>›</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.heroDate}>{formatDate(day.date_assigned)}</Text>
+              {day.day_month ? <Text style={styles.heroLabel}>{day.day_month}</Text> : null}
+            </>
+          )}
         </LinearGradient>
       </AnimatedFade>
 
@@ -157,6 +205,51 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 1,
+  },
+
+  // Prev/next day navigation inside the hero
+  heroNavRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  heroDateCentered: {
+    textAlign: 'center',
+  },
+  navBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navChevron: {
+    fontSize: 36,
+    lineHeight: 38,
+    fontWeight: '700',
+    color: '#FFFCF0',
+  },
+  navDisabled: {
+    opacity: 0.28,
+  },
+  todayPill: {
+    marginTop: 10,
+    backgroundColor: 'rgba(255,252,240,0.18)',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255,252,240,0.35)',
+  },
+  todayPillText: {
+    color: '#FFFCF0',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
   // Chapters section

@@ -9,6 +9,7 @@ use App\Models\Answer;
 use App\Models\Day;
 use App\Models\Response;
 use App\Support\AwardCategory;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -28,6 +29,36 @@ class ReadingController extends Controller
         }
 
         return new DayResource($day);
+    }
+
+    /**
+     * A single day's reading by date (defaults to today), together with the
+     * dates of the adjacent plan days so the app can offer prev/next navigation
+     * and disable the arrows at the plan's edges. Public — honours a token when
+     * present so answered_count reflects the user.
+     */
+    public function byDate(Request $request, ?string $date = null): JsonResponse
+    {
+        $date = $date ? Carbon::parse($date)->toDateString() : today()->toDateString();
+
+        $day = Day::whereDate('date_assigned', $date)
+            ->with(['questions.answers' => fn ($q) => $q->select(['id', 'description', 'question_id'])])
+            ->withCount('questions')
+            ->withCount($this->answeredCountScope($request->user()?->id))
+            ->first();
+
+        if (! $day) {
+            return response()->json(['message' => 'No reading assigned for this date.'], 404);
+        }
+
+        $prev = Day::whereDate('date_assigned', '<', $date)->max('date_assigned');
+        $next = Day::whereDate('date_assigned', '>', $date)->min('date_assigned');
+
+        return response()->json([
+            'data' => new DayResource($day),
+            'prev_date' => $prev ? Carbon::parse($prev)->toDateString() : null,
+            'next_date' => $next ? Carbon::parse($next)->toDateString() : null,
+        ]);
     }
 
     public function index(Request $request): AnonymousResourceCollection

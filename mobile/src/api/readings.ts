@@ -34,6 +34,22 @@ export async function getReading(id: number): Promise<Day> {
   return data.data;
 }
 
+export interface DayView {
+  day: Day;
+  prevDate: string | null;
+  nextDate: string | null;
+}
+
+/**
+ * Fetch a day's reading by date (defaults to today when omitted), plus the
+ * adjacent plan dates for prev/next navigation.
+ */
+export async function getDayView(date?: string): Promise<DayView> {
+  const path = date ? `/readings/by-date/${date}` : '/readings/by-date';
+  const { data } = await client.get(path);
+  return { day: data.data, prevDate: data.prev_date, nextDate: data.next_date };
+}
+
 export interface QuestionsResponse {
   questions: Question[];
   allAnswered: boolean;

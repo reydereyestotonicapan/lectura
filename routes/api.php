@@ -16,6 +16,7 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Public routes — accessible without auth (guests), but honour token when present
 Route::get('/readings/today', [ReadingController::class, 'today']);
+Route::get('/readings/by-date/{date?}', [ReadingController::class, 'byDate']);
 Route::get('/readings/{day}/questions', [ReadingController::class, 'questions']);
 Route::get('/readings/{day}/chapters', [ChapterProgressController::class, 'show']);
 

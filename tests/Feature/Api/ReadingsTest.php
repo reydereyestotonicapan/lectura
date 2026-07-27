@@ -53,6 +53,48 @@ it('returns today\'s reading with questions and answers (no is_correct)', functi
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/readings/by-date/{date?}
+// ---------------------------------------------------------------------------
+
+it('returns a day by date with prev and next neighbor dates', function () {
+    $prev = Day::factory()->create(['date_assigned' => '2026-07-26']);
+    $current = Day::factory()->create(['date_assigned' => '2026-07-27']);
+    $next = Day::factory()->create(['date_assigned' => '2026-07-28']);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings/by-date/2026-07-27')
+        ->assertStatus(200)
+        ->assertJsonPath('data.id', $current->id)
+        ->assertJsonPath('prev_date', '2026-07-26')
+        ->assertJsonPath('next_date', '2026-07-28');
+});
+
+it('has null neighbors at the plan edges', function () {
+    $only = Day::factory()->create(['date_assigned' => '2026-07-27']);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings/by-date/2026-07-27')
+        ->assertStatus(200)
+        ->assertJsonPath('prev_date', null)
+        ->assertJsonPath('next_date', null);
+});
+
+it('defaults by-date to today when no date is given', function () {
+    $today = Day::factory()->create(['date_assigned' => today()->toDateString()]);
+
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings/by-date')
+        ->assertStatus(200)
+        ->assertJsonPath('data.id', $today->id);
+});
+
+it('returns 404 for a date with no reading', function () {
+    $this->actingAs($this->user, 'sanctum')
+        ->getJson('/api/readings/by-date/2030-01-01')
+        ->assertStatus(404);
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/readings
 // ---------------------------------------------------------------------------
 

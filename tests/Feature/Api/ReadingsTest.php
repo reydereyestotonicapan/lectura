@@ -213,6 +213,65 @@ it('returns questions for a day without is_correct', function () {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/results/days  &  GET /api/responses?day=
+// ---------------------------------------------------------------------------
+
+it('lists answered days with per-day result summaries', function () {
+    // Day A: one correct, one pending. Day B: one incorrect. Day C: no answers.
+    $dayA = Day::factory()->create(['date_assigned' => '2026-07-27']);
+    $dayB = Day::factory()->create(['date_assigned' => '2026-07-26']);
+    Day::factory()->create(['date_assigned' => '2026-07-25']); // unanswered -> excluded
+
+    $answerFor = function (Day $day, StatusResponse $status) {
+        $question = Question::factory()->create(['day_id' => $day->id]);
+        $answer = Answer::factory()->create(['question_id' => $question->id]);
+        Response::create([
+            'user_id' => $this->user->id,
+            'day_id' => $day->id,
+            'question_id' => $question->id,
+            'answer_id' => $answer->id,
+            'status' => $status,
+        ]);
+    };
+
+    $answerFor($dayA, StatusResponse::EXPECTED);
+    $answerFor($dayA, StatusResponse::PENDING);
+    $answerFor($dayB, StatusResponse::WRONG);
+
+    $res = $this->actingAs($this->user, 'sanctum')->getJson('/api/results/days');
+
+    $res->assertStatus(200)
+        ->assertJsonPath('meta.total', 2) // only answered days
+        ->assertJsonPath('data.0.id', $dayA->id) // newest first
+        ->assertJsonPath('data.0.answered_count', 2)
+        ->assertJsonPath('data.0.correct_count', 1)
+        ->assertJsonPath('data.0.pending_count', 1)
+        ->assertJsonPath('data.1.id', $dayB->id)
+        ->assertJsonPath('data.1.correct_count', 0);
+});
+
+it('filters responses to a single day', function () {
+    $dayA = Day::factory()->create(['date_assigned' => '2026-07-27']);
+    $dayB = Day::factory()->create(['date_assigned' => '2026-07-26']);
+
+    foreach ([$dayA, $dayB] as $day) {
+        $question = Question::factory()->create(['day_id' => $day->id]);
+        $answer = Answer::factory()->create(['question_id' => $question->id]);
+        Response::create([
+            'user_id' => $this->user->id,
+            'day_id' => $day->id,
+            'question_id' => $question->id,
+            'answer_id' => $answer->id,
+            'status' => StatusResponse::EXPECTED,
+        ]);
+    }
+
+    $res = $this->actingAs($this->user, 'sanctum')->getJson("/api/responses?day={$dayA->id}");
+
+    $res->assertStatus(200)->assertJsonPath('meta.total', 1);
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/profile
 // ---------------------------------------------------------------------------
 

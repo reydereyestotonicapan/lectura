@@ -63,7 +63,22 @@ export async function getQuestions(dayId: number): Promise<QuestionsResponse> {
   };
 }
 
-export async function getResponses(page = 1): Promise<PaginatedResponse<UserResponse>> {
-  const { data } = await client.get('/responses', { params: { page } });
+export async function getResponses(page = 1, dayId?: number): Promise<PaginatedResponse<UserResponse>> {
+  const { data } = await client.get('/responses', { params: { page, day: dayId } });
+  return data;
+}
+
+export interface ResultDay {
+  id: number;
+  date_assigned: string;
+  day_month: string;
+  chapters: string;
+  answered_count: number;
+  correct_count: number;
+  pending_count: number;
+}
+
+export async function getResultDays(page = 1): Promise<PaginatedResponse<ResultDay>> {
+  const { data } = await client.get('/results/days', { params: { page } });
   return data;
 }

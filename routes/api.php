@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/readings/{day}/answers', [ReadingController::class, 'submitAnswers']);
     Route::get('/profile', [ReadingController::class, 'profile']);
     Route::get('/responses', [ReadingController::class, 'responses']);
+    Route::get('/results/days', [ReadingController::class, 'resultDays']);
 
     // Chapter progress write routes
     Route::post('/chapters/{chapter}/progress', [ChapterProgressController::class, 'markRead']);

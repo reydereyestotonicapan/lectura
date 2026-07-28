@@ -278,6 +278,45 @@ class ReadingController extends Controller
         ]);
     }
 
+    /**
+     * The days the authenticated user has answered, newest first, each with a
+     * summary of how their answers turned out — so results can be browsed by
+     * day (like the readings list) instead of one long flat stream.
+     */
+    public function resultDays(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $days = Day::whereHas('responses', fn ($q) => $q->where('user_id', $userId))
+            ->withCount([
+                'responses as answered_count' => fn ($q) => $q->where('user_id', $userId),
+                'responses as correct_count' => fn ($q) => $q->where('user_id', $userId)
+                    ->where('status', StatusResponse::EXPECTED->value),
+                'responses as pending_count' => fn ($q) => $q->where('user_id', $userId)
+                    ->where('status', StatusResponse::PENDING->value),
+            ])
+            ->orderByDesc('date_assigned')
+            ->paginate(20);
+
+        return response()->json([
+            'data' => $days->map(fn (Day $day) => [
+                'id' => $day->id,
+                'date_assigned' => $day->date_assigned->toDateString(),
+                'day_month' => $day->day_month,
+                'chapters' => $day->chapters,
+                'answered_count' => $day->answered_count,
+                'correct_count' => $day->correct_count,
+                'pending_count' => $day->pending_count,
+            ]),
+            'meta' => [
+                'current_page' => $days->currentPage(),
+                'last_page' => $days->lastPage(),
+                'per_page' => $days->perPage(),
+                'total' => $days->total(),
+            ],
+        ]);
+    }
+
     public function profile(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -294,6 +333,7 @@ class ReadingController extends Controller
         $user = $request->user();
 
         $responses = Response::where('responses.user_id', $user->id)
+            ->when($request->filled('day'), fn ($q) => $q->where('responses.day_id', $request->integer('day')))
             ->join('days', 'responses.day_id', '=', 'days.id')
             ->select('responses.*')
             ->with(['day', 'question.correctAnswer', 'answer'])

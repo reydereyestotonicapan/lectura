@@ -27,6 +27,14 @@ class Day extends Model
     }
 
     /**
+     * Get the answer responses recorded for this day (across all users).
+     */
+    public function responses(): HasMany
+    {
+        return $this->hasMany(Response::class);
+    }
+
+    /**
      * Get the chapters assigned to this day.
      */
     public function dayChapters(): HasMany

@@ -4,7 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { TodayStackParamList } from '../navigation/types';
 import { useTheme } from '../theme';
-import { getToday } from '../api/readings';
+import { getDayView, DayView } from '../api/readings';
 import { Day } from '../types/api';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
@@ -21,11 +21,14 @@ type Props = NativeStackScreenProps<TodayStackParamList, 'Today'>;
 export default function TodayScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const [day, setDay] = useState<Day | null>(null);
+  const [prevDate, setPrevDate] = useState<string | null>(null);
+  const [nextDate, setNextDate] = useState<string | null>(null);
+  const [todayDate, setTodayDate] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
-
   const [refreshing, setRefreshing] = useState(false);
+  const [navBusy, setNavBusy] = useState(false);
 
   const { chapters, isLoading: isLoadingChapters, error: chapterError, toggleChapter, refreshProgress } =
     useChapterProgress(day?.id ?? null);
@@ -39,6 +42,8 @@ export default function TodayScreen({ navigation }: Props) {
     toggleChapter,
     exitGuestMode,
   });
+
+  const isViewingToday = day != null && todayDate != null && day.date_assigned === todayDate;
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -66,48 +71,23 @@ export default function TodayScreen({ navigation }: Props) {
     });
   }, [navigation, isGuest, exitGuestMode, colors]);
 
-  useFocusEffect(
-    useCallback(() => {
-      refreshSettings();
-      refreshMonthlyProgress();
-    }, [refreshSettings, refreshMonthlyProgress])
-  );
-
   const appStateRef = useRef(AppState.currentState);
   const lastRefreshRef = useRef(0);
 
-  // Core fetch of today's reading + chapters. Never touches the full-screen
-  // loading state, so it can run silently in the background. When `silent`,
-  // a transient network error is swallowed so we keep showing existing content
-  // instead of flashing the error screen on resume.
-  const fetchToday = useCallback(
-    async (silent = false) => {
-      if (!silent) {
-        setError(null);
-        setNotFound(false);
-      }
-      try {
-        const data = await getToday();
-        setDay(data);
-        setError(null);
-        setNotFound(false);
-        lastRefreshRef.current = Date.now();
-        await Promise.all([refreshProgress(), refreshSettings(), refreshMonthlyProgress()]);
-      } catch (err: any) {
-        if (err.response?.status === 404) setNotFound(true);
-        else if (!silent) setError('No se pudo cargar la lectura. Verifica tu conexión.');
-      }
-    },
-    [refreshProgress, refreshSettings, refreshMonthlyProgress]
-  );
+  const applyView = useCallback((view: DayView, isTodayLoad: boolean) => {
+    setDay(view.day);
+    setPrevDate(view.prevDate);
+    setNextDate(view.nextDate);
+    if (isTodayLoad) setTodayDate(view.day.date_assigned);
+  }, []);
 
+  // Initial full-screen load of today's reading.
   const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setNotFound(false);
     try {
-      const data = await getToday();
-      setDay(data);
+      applyView(await getDayView(), true);
       lastRefreshRef.current = Date.now();
     } catch (err: any) {
       if (err.response?.status === 404) setNotFound(true);
@@ -115,42 +95,85 @@ export default function TodayScreen({ navigation }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [applyView]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Manual pull-to-refresh — shows the pull spinner.
+  // Navigate to an adjacent day (or back to today) in place — no full-screen
+  // spinner. Chapters refetch automatically as the day id changes.
+  const goToDate = useCallback(
+    async (date?: string) => {
+      setNavBusy(true);
+      try {
+        applyView(await getDayView(date), !date);
+        setError(null);
+        setNotFound(false);
+        lastRefreshRef.current = Date.now();
+        refreshMonthlyProgress();
+      } catch {
+        // Keep the current day on a transient failure.
+      } finally {
+        setNavBusy(false);
+      }
+    },
+    [applyView, refreshMonthlyProgress]
+  );
+
+  // Silent refresh of the currently viewed day (pull-to-refresh, resume, focus).
+  // Reloads the same date so answered counts / progress stay current.
+  const refreshCurrent = useCallback(
+    async (silent = false) => {
+      const date = isViewingToday ? undefined : day?.date_assigned;
+      try {
+        applyView(await getDayView(date), !date);
+        setError(null);
+        setNotFound(false);
+        lastRefreshRef.current = Date.now();
+        await Promise.all([refreshProgress(), refreshSettings(), refreshMonthlyProgress()]);
+      } catch (err: any) {
+        if (err.response?.status === 404 && !date) setNotFound(true);
+        else if (!silent) setError('No se pudo cargar la lectura. Verifica tu conexión.');
+      }
+    },
+    [isViewingToday, day?.date_assigned, applyView, refreshProgress, refreshSettings, refreshMonthlyProgress]
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await fetchToday();
+      await refreshCurrent(true);
     } finally {
       setRefreshing(false);
     }
-  }, [fetchToday]);
+  }, [refreshCurrent]);
 
-  // Keep a stable ref to the latest fetch so the AppState listener can be
-  // registered once (below) rather than resubscribing on every dep change.
-  const fetchTodayRef = useRef(fetchToday);
+  // Refresh settings on focus; after the first focus also refresh the viewed day
+  // so answering its quiz (then returning) reflects immediately.
+  const didFocus = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      refreshSettings();
+      if (didFocus.current) refreshCurrent(true);
+      else didFocus.current = true;
+    }, [refreshSettings, refreshCurrent])
+  );
+
+  // Auto-refresh the viewed day whenever the app returns to the foreground.
+  // Registered once; uses a ref to reach the latest refresh closure.
+  const refreshCurrentRef = useRef(refreshCurrent);
   useEffect(() => {
-    fetchTodayRef.current = fetchToday;
-  }, [fetchToday]);
-
-  // Auto-refresh whenever the app returns to the foreground. We always refetch
-  // (the server decides what "today" is) instead of trusting the device clock,
-  // which can read stale right after resume. Registered once to avoid resubscribe
-  // races; runs silently and is throttled to dedupe repeated AppState events.
+    refreshCurrentRef.current = refreshCurrent;
+  }, [refreshCurrent]);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
       const prev = appStateRef.current;
       appStateRef.current = next;
       const resumed = (prev === 'background' || prev === 'inactive') && next === 'active';
       if (resumed && Date.now() - lastRefreshRef.current > 5000) {
-        // Delay briefly so the app finishes foregrounding / network settles.
         setTimeout(() => {
-          fetchTodayRef.current(true);
+          refreshCurrentRef.current(true);
         }, 400);
       }
     });
@@ -188,7 +211,15 @@ export default function TodayScreen({ navigation }: Props) {
         isLoadingChapters={isLoadingChapters}
         chapterError={chapterError}
         monthlyProgress={monthlyProgress}
-        isToday
+        isToday={isViewingToday}
+        nav={{
+          onPrev: () => prevDate && goToDate(prevDate),
+          onNext: () => nextDate && goToDate(nextDate),
+          canPrev: !!prevDate && !navBusy,
+          canNext: !!nextDate && !navBusy,
+          onToday: () => goToDate(undefined),
+          isToday: isViewingToday,
+        }}
         onToggle={handleToggle}
         onRead={handleRead}
         onWatch={handleWatch}

@@ -9,6 +9,7 @@ use App\Models\Answer;
 use App\Models\Day;
 use App\Models\Response;
 use App\Support\AwardCategory;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -28,6 +29,36 @@ class ReadingController extends Controller
         }
 
         return new DayResource($day);
+    }
+
+    /**
+     * A single day's reading by date (defaults to today), together with the
+     * dates of the adjacent plan days so the app can offer prev/next navigation
+     * and disable the arrows at the plan's edges. Public — honours a token when
+     * present so answered_count reflects the user.
+     */
+    public function byDate(Request $request, ?string $date = null): JsonResponse
+    {
+        $date = $date ? Carbon::parse($date)->toDateString() : today()->toDateString();
+
+        $day = Day::whereDate('date_assigned', $date)
+            ->with(['questions.answers' => fn ($q) => $q->select(['id', 'description', 'question_id'])])
+            ->withCount('questions')
+            ->withCount($this->answeredCountScope($request->user()?->id))
+            ->first();
+
+        if (! $day) {
+            return response()->json(['message' => 'No reading assigned for this date.'], 404);
+        }
+
+        $prev = Day::whereDate('date_assigned', '<', $date)->max('date_assigned');
+        $next = Day::whereDate('date_assigned', '>', $date)->min('date_assigned');
+
+        return response()->json([
+            'data' => new DayResource($day),
+            'prev_date' => $prev ? Carbon::parse($prev)->toDateString() : null,
+            'next_date' => $next ? Carbon::parse($next)->toDateString() : null,
+        ]);
     }
 
     public function index(Request $request): AnonymousResourceCollection
@@ -247,6 +278,45 @@ class ReadingController extends Controller
         ]);
     }
 
+    /**
+     * The days the authenticated user has answered, newest first, each with a
+     * summary of how their answers turned out — so results can be browsed by
+     * day (like the readings list) instead of one long flat stream.
+     */
+    public function resultDays(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $days = Day::whereHas('responses', fn ($q) => $q->where('user_id', $userId))
+            ->withCount([
+                'responses as answered_count' => fn ($q) => $q->where('user_id', $userId),
+                'responses as correct_count' => fn ($q) => $q->where('user_id', $userId)
+                    ->where('status', StatusResponse::EXPECTED->value),
+                'responses as pending_count' => fn ($q) => $q->where('user_id', $userId)
+                    ->where('status', StatusResponse::PENDING->value),
+            ])
+            ->orderByDesc('date_assigned')
+            ->paginate(20);
+
+        return response()->json([
+            'data' => $days->map(fn (Day $day) => [
+                'id' => $day->id,
+                'date_assigned' => $day->date_assigned->toDateString(),
+                'day_month' => $day->day_month,
+                'chapters' => $day->chapters,
+                'answered_count' => $day->answered_count,
+                'correct_count' => $day->correct_count,
+                'pending_count' => $day->pending_count,
+            ]),
+            'meta' => [
+                'current_page' => $days->currentPage(),
+                'last_page' => $days->lastPage(),
+                'per_page' => $days->perPage(),
+                'total' => $days->total(),
+            ],
+        ]);
+    }
+
     public function profile(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -263,6 +333,7 @@ class ReadingController extends Controller
         $user = $request->user();
 
         $responses = Response::where('responses.user_id', $user->id)
+            ->when($request->filled('day'), fn ($q) => $q->where('responses.day_id', $request->integer('day')))
             ->join('days', 'responses.day_id', '=', 'days.id')
             ->select('responses.*')
             ->with(['day', 'question.correctAnswer', 'answer'])

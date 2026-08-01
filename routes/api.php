@@ -16,6 +16,7 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Public routes — accessible without auth (guests), but honour token when present
 Route::get('/readings/today', [ReadingController::class, 'today']);
+Route::get('/readings/by-date/{date?}', [ReadingController::class, 'byDate']);
 Route::get('/readings/{day}/questions', [ReadingController::class, 'questions']);
 Route::get('/readings/{day}/chapters', [ChapterProgressController::class, 'show']);
 
@@ -35,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/readings/{day}/answers', [ReadingController::class, 'submitAnswers']);
     Route::get('/profile', [ReadingController::class, 'profile']);
     Route::get('/responses', [ReadingController::class, 'responses']);
+    Route::get('/results/days', [ReadingController::class, 'resultDays']);
 
     // Chapter progress write routes
     Route::post('/chapters/{chapter}/progress', [ChapterProgressController::class, 'markRead']);

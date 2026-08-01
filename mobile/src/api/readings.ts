@@ -34,6 +34,22 @@ export async function getReading(id: number): Promise<Day> {
   return data.data;
 }
 
+export interface DayView {
+  day: Day;
+  prevDate: string | null;
+  nextDate: string | null;
+}
+
+/**
+ * Fetch a day's reading by date (defaults to today when omitted), plus the
+ * adjacent plan dates for prev/next navigation.
+ */
+export async function getDayView(date?: string): Promise<DayView> {
+  const path = date ? `/readings/by-date/${date}` : '/readings/by-date';
+  const { data } = await client.get(path);
+  return { day: data.data, prevDate: data.prev_date, nextDate: data.next_date };
+}
+
 export interface QuestionsResponse {
   questions: Question[];
   allAnswered: boolean;
@@ -47,7 +63,22 @@ export async function getQuestions(dayId: number): Promise<QuestionsResponse> {
   };
 }
 
-export async function getResponses(page = 1): Promise<PaginatedResponse<UserResponse>> {
-  const { data } = await client.get('/responses', { params: { page } });
+export async function getResponses(page = 1, dayId?: number): Promise<PaginatedResponse<UserResponse>> {
+  const { data } = await client.get('/responses', { params: { page, day: dayId } });
+  return data;
+}
+
+export interface ResultDay {
+  id: number;
+  date_assigned: string;
+  day_month: string;
+  chapters: string;
+  answered_count: number;
+  correct_count: number;
+  pending_count: number;
+}
+
+export async function getResultDays(page = 1): Promise<PaginatedResponse<ResultDay>> {
+  const { data } = await client.get('/results/days', { params: { page } });
   return data;
 }

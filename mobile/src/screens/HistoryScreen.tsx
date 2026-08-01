@@ -1,85 +1,56 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { getResponses } from '../api/readings';
-import { useTheme, Radii, Spacing, createShadows, ThemeColors } from '../theme';
-import { UserResponse } from '../types/api';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { HistoryStackParamList } from '../navigation/HistoryStack';
+import { getResultDays, ResultDay } from '../api/readings';
+import { useTheme, Radii, Spacing, createShadows } from '../theme';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import AnimatedFade from '../components/ui/AnimatedFade';
 
-type StatusType = 'Correcta' | 'Incorrecta' | 'Pendiente';
+type Props = NativeStackScreenProps<HistoryStackParamList, 'HistoryList'>;
 
-const getStatusConfig = (colors: ThemeColors) => ({
-  Correcta: { color: colors.success, bg: colors.successBg, border: colors.successBorder, icon: '✓' },
-  Incorrecta: { color: colors.error, bg: colors.errorBg, border: colors.errorBorder, icon: '✗' },
-  Pendiente: { color: colors.warning, bg: colors.warningBg, border: colors.warningBorder, icon: '?' },
-});
+function ResultDayCard({ day, index, onPress }: { day: ResultDay; index: number; onPress: () => void }) {
+  const { colors, isDark } = useTheme();
+  const shadows = createShadows(isDark);
 
-function ResponseCard({ response, index, colors, shadows }: { response: UserResponse; index: number; colors: ThemeColors; shadows: ReturnType<typeof createShadows> }) {
-  const statusConfig = getStatusConfig(colors);
-  const cfg = statusConfig[response.status];
+  const allCorrect = day.pending_count === 0 && day.correct_count === day.answered_count;
+  const stripe = day.pending_count > 0 ? colors.warning : allCorrect ? colors.success : colors.gold;
 
   return (
-    <AnimatedFade delay={Math.min(index * 40, 240)}>
-      <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}>
-        {/* Header */}
-        <View style={styles.cardTop}>
-          <View style={styles.dayInfo}>
-            <Text style={[styles.dayMonth, { color: colors.gold }]}>{response.day_month}</Text>
-            <Text style={[styles.chapters, { color: colors.textMuted }]} numberOfLines={1}>{response.chapters}</Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: cfg.bg, borderColor: cfg.border }]}>
-            <Text style={[styles.badgeIcon, { color: cfg.color }]}>{cfg.icon}</Text>
-            <Text style={[styles.badgeText, { color: cfg.color }]}>{response.status}</Text>
-          </View>
-        </View>
+    <AnimatedFade delay={Math.min(index * 40, 200)}>
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.sm]}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.stripe, { backgroundColor: stripe }]} />
 
-        {/* Question */}
-        <Text style={[styles.question, { color: colors.textPrimary }]}>{response.question}</Text>
-
-        {/* Answers */}
-        <View style={[styles.answers, { backgroundColor: colors.background, borderColor: colors.border }]}>
-          <View style={styles.answerRow}>
-            <Text style={[styles.answerLabel, { color: colors.textMuted }]}>Tu respuesta</Text>
-            <Text
-              style={[
-                styles.answerValue,
-                { color: colors.textSecondary },
-                response.status === 'Correcta' && { color: colors.success },
-                response.status === 'Incorrecta' && { color: colors.error },
-              ]}
-            >
-              {response.your_answer || '—'}
+        <View style={styles.cardBody}>
+          <Text style={[styles.dayMonth, { color: colors.gold }]}>{day.day_month}</Text>
+          <Text style={[styles.chapters, { color: colors.textPrimary }]} numberOfLines={1}>{day.chapters}</Text>
+          <View style={styles.summaryRow}>
+            <Text style={[styles.summary, { color: colors.textMuted }]}>
+              ✓ {day.correct_count}/{day.answered_count}
             </Text>
-          </View>
-
-          {response.correct_answer && response.status !== 'Correcta' && (
-            <View style={styles.answerRow}>
-              <Text style={[styles.answerLabel, { color: colors.textMuted }]}>Correcta</Text>
-              <Text style={[styles.answerValue, { color: colors.success, fontWeight: '600' }]}>
-                {response.correct_answer}
+            {day.pending_count > 0 ? (
+              <Text style={[styles.summary, { color: colors.warning }]}>
+                · {day.pending_count} pendiente{day.pending_count === 1 ? '' : 's'}
               </Text>
-            </View>
-          )}
+            ) : null}
+          </View>
         </View>
 
-        {/* Team comment */}
-        {response.team_comment ? (
-          <View style={[styles.teamComment, { backgroundColor: colors.primaryLight, borderColor: colors.borderMed }]}>
-            <Text style={[styles.teamCommentLabel, { color: colors.primary }]}>💬 Comentario del equipo</Text>
-            <Text style={[styles.teamCommentText, { color: colors.textSecondary }]}>{response.team_comment}</Text>
-          </View>
-        ) : null}
-      </View>
+        <Text style={[styles.arrow, { color: colors.textDisabled }]}>›</Text>
+      </TouchableOpacity>
     </AnimatedFade>
   );
 }
 
-export default function HistoryScreen() {
-  const { colors, isDark } = useTheme();
-  const shadows = createShadows(isDark);
-  const [responses, setResponses] = useState<UserResponse[]>([]);
+export default function HistoryScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const [days, setDays] = useState<ResultDay[]>([]);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,12 +59,12 @@ export default function HistoryScreen() {
 
   const loadPage = useCallback(async (p: number) => {
     try {
-      const data = await getResponses(p);
-      if (p === 1) setResponses(data.data);
-      else setResponses((prev) => [...prev, ...data.data]);
+      const data = await getResultDays(p);
+      if (p === 1) setDays(data.data);
+      else setDays((prev) => [...prev, ...data.data]);
       setLastPage(data.meta.last_page);
     } catch {
-      if (p === 1) setError('No se pudo cargar el historial.');
+      if (p === 1) setError('No se pudieron cargar los resultados.');
     }
   }, []);
 
@@ -105,7 +76,7 @@ export default function HistoryScreen() {
     setIsLoading(false);
   }, [loadPage]);
 
-  // Reload data every time the screen comes into focus
+  // Reload every time the screen comes into focus (e.g. after answering a quiz).
   useFocusEffect(
     useCallback(() => {
       init();
@@ -129,12 +100,12 @@ export default function HistoryScreen() {
     );
   }
   if (error) return <ErrorState message={error} onRetry={init} />;
-  if (responses.length === 0) {
+  if (days.length === 0) {
     return (
       <EmptyState
         icon="📋"
-        message="Sin historial aún"
-        detail="Completa las preguntas diarias para ver tus respuestas aquí."
+        message="Sin resultados aún"
+        detail="Completa las preguntas diarias para ver tus resultados aquí."
       />
     );
   }
@@ -142,21 +113,23 @@ export default function HistoryScreen() {
   return (
     <FlatList
       style={[styles.root, { backgroundColor: colors.background }]}
-      data={responses}
-      keyExtractor={(r) => String(r.id)}
+      data={days}
+      keyExtractor={(d) => String(d.id)}
       contentContainerStyle={styles.list}
       onEndReached={loadMore}
       onEndReachedThreshold={0.3}
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={
-        <Text style={[styles.listHeader, { color: colors.textMuted }]}>Tu historial de respuestas</Text>
+        <Text style={[styles.listHeader, { color: colors.textMuted }]}>Toca un día para ver tus respuestas</Text>
       }
-      ListFooterComponent={
-        isFetchingMore ? (
-          <ActivityIndicator color={colors.gold} style={styles.footer} />
-        ) : null
-      }
-      renderItem={({ item, index }) => <ResponseCard response={item} index={index} colors={colors} shadows={shadows} />}
+      ListFooterComponent={isFetchingMore ? <ActivityIndicator color={colors.gold} style={styles.footer} /> : null}
+      renderItem={({ item, index }) => (
+        <ResultDayCard
+          day={item}
+          index={index}
+          onPress={() => navigation.navigate('DayResults', { dayId: item.id, date: item.date_assigned })}
+        />
+      )}
     />
   );
 }
@@ -175,81 +148,46 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    borderRadius: Radii.xl,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-  },
-  cardTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    borderRadius: Radii.xl,
+    marginBottom: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  dayInfo: { flex: 1, marginRight: 10 },
+  stripe: {
+    width: 4,
+    alignSelf: 'stretch',
+  },
+  cardBody: {
+    flex: 1,
+    padding: 16,
+  },
   dayMonth: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    marginBottom: 3,
   },
   chapters: {
-    fontSize: 13,
-    marginTop: 3,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 5,
+    letterSpacing: -0.2,
   },
-  badge: {
+  summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: Radii.full,
-    borderWidth: 1,
-    gap: 4,
+    gap: 5,
   },
-  badgeIcon: { fontSize: 11, fontWeight: '800' },
-  badgeText: { fontSize: 12, fontWeight: '700' },
-
-  question: {
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-
-  answers: {
-    borderRadius: Radii.md,
-    padding: 12,
-    borderWidth: 1,
-    gap: 6,
-  },
-  answerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  answerLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    width: 90,
-    paddingTop: 1,
-  },
-  answerValue: {
+  summary: {
     fontSize: 13,
-    flex: 1,
-    lineHeight: 19,
+    fontWeight: '600',
   },
-
-  teamComment: {
-    borderRadius: Radii.md,
-    padding: 12,
-    marginTop: 10,
-    borderWidth: 1,
-  },
-  teamCommentLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 5,
-  },
-  teamCommentText: {
-    fontSize: 13,
-    lineHeight: 20,
+  arrow: {
+    fontSize: 22,
+    paddingRight: 14,
+    fontWeight: '300',
   },
 });

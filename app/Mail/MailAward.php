@@ -15,6 +15,7 @@ use Illuminate\Queue\SerializesModels;
 class MailAward extends Mailable
 {
     protected $award;
+
     use Queueable, SerializesModels;
 
     /**
@@ -24,7 +25,9 @@ class MailAward extends Mailable
     {
         $this->award = $awardParam;
     }
-    private static function formattedCategory(Award $award) : string {
+
+    private static function formattedCategory(Award $award): string
+    {
         return strtolower(match ($award->category) {
             'gold' => 'ORO',
             'silver' => 'PLATA',
@@ -37,8 +40,10 @@ class MailAward extends Mailable
      */
     public function envelope(): Envelope
     {
+        $awardDate = Carbon::parse($this->award->month_date)->locale('es');
+
         return new Envelope(
-            subject: 'Lector de '. self::formattedCategory($this->award) . ' ' .Carbon::now()->locale('es')->monthName.' '.Carbon::now()->year,
+            subject: 'Lector de '.self::formattedCategory($this->award).' '.$awardDate->monthName.' '.$awardDate->year,
         );
     }
 
@@ -58,13 +63,13 @@ class MailAward extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
         return [
-            Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/' . $this->award->file_name)
-            ->withMime(GenerateAward::MIME_TYPE),
+            Attachment::fromStorageDisk(GenerateAward::DISK, GenerateAward::DIRECTORY.'/'.$this->award->file_name)
+                ->withMime(GenerateAward::MIME_TYPE),
         ];
     }
 }

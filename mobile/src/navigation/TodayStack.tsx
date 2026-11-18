@@ -6,6 +6,7 @@ import ReadingsScreen from '../screens/ReadingsScreen';
 import ReadingDetailScreen from '../screens/ReadingDetailScreen';
 import QuizScreen from '../screens/QuizScreen';
 import ResultsScreen from '../screens/ResultsScreen';
+import DayResultsScreen from '../screens/DayResultsScreen';
 import { useTheme } from '../theme';
 
 const Stack = createStackNavigator<TodayStackParamList>();
@@ -28,6 +29,7 @@ export default function TodayStack() {
       <Stack.Screen name="ReadingDetail" component={ReadingDetailScreen} options={{ title: 'Lectura' }} />
       <Stack.Screen name="Quiz" component={QuizScreen} options={{ title: 'Preguntas' }} />
       <Stack.Screen name="Results" component={ResultsScreen} options={{ title: 'Resultados', headerLeft: () => null }} />
+      <Stack.Screen name="DayResults" component={DayResultsScreen} options={{ title: 'Resultados' }} />
     </Stack.Navigator>
   );
 }

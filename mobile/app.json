@@ -3,7 +3,7 @@
     "name": "gRafé",
     "slug": "grafe",
     "scheme": "grafe",
-    "version": "1.0.17",
+    "version": "1.0.20",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

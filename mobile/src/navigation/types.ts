@@ -18,6 +18,7 @@ export type TodayStackParamList = {
     results: SubmitResult[];
     questions: Question[];
   };
+  DayResults: { dayId: number; date: string };
 };
 
 export type AccountStackParamList = {
@@ -32,7 +33,6 @@ export type KidsStackParamList = {
 
 export type AppTabsParamList = {
   TodayTab: undefined;
-  History: undefined;
   KidsTab: undefined;
   Account: undefined;
 };

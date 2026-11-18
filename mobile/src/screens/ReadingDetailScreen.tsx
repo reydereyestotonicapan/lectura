@@ -122,6 +122,7 @@ export default function ReadingDetailScreen({ route, navigation }: Props) {
         onRead={handleRead}
         onWatch={handleWatch}
         onOpenQuiz={() => navigation.navigate('Quiz', { dayId: day.id })}
+        onViewResults={() => navigation.navigate('DayResults', { dayId: day.id, date: day.date_assigned })}
       />
     </ScrollView>
   );

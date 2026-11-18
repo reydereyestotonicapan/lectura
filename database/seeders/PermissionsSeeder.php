@@ -61,6 +61,7 @@ class PermissionsSeeder extends Seeder
         $superAdminRole = Role::where('name', 'super_admin')->first();
         $adminRole = Role::where('name', 'admin')->first();
         $InventoryAdminRole = Role::where('name', 'inventory_admin')->first();
+        $leaderRole = Role::where('name', 'leader')->first();
 
         // If roles don't exist yet, create them
         if (!$superAdminRole) {
@@ -71,6 +72,10 @@ class PermissionsSeeder extends Seeder
         }
         if(!$InventoryAdminRole){
             $InventoryAdminRole = Role::create(['name' => 'inventory_admin']);
+        }
+        // Access is gated by a direct hasRole('leader') check, so no permissions are attached.
+        if (!$leaderRole) {
+            $leaderRole = Role::create(['name' => 'leader']);
         }
 
         // Ensure all permissions exist before assigning

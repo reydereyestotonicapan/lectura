@@ -1,2 +1,3 @@
 [phases.setup]
+nixpkgsArchive = "f68407657ad294471eb4b2e65d193df26edf729f"
 nixPkgs = ["(php83.withExtensions (pe: pe.enabled ++ []))", "nginx", "libmysqlclient", "php83Packages.composer", "nodejs_22", "npm-9_x"]

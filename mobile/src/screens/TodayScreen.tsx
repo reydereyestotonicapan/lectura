@@ -73,6 +73,9 @@ export default function TodayScreen({ navigation }: Props) {
 
   const appStateRef = useRef(AppState.currentState);
   const lastRefreshRef = useRef(0);
+  // Tracks when goToDate last completed — used to suppress the redundant
+  // useFocusEffect re-run that would otherwise double-fetch chapters.
+  const navTimestampRef = useRef(0);
 
   const applyView = useCallback((view: DayView, isTodayLoad: boolean) => {
     setDay(view.day);
@@ -110,6 +113,7 @@ export default function TodayScreen({ navigation }: Props) {
         applyView(await getDayView(date), !date);
         setError(null);
         setNotFound(false);
+        navTimestampRef.current = Date.now();
         lastRefreshRef.current = Date.now();
         refreshMonthlyProgress();
       } catch {
@@ -151,12 +155,18 @@ export default function TodayScreen({ navigation }: Props) {
 
   // Refresh settings on focus; after the first focus also refresh the viewed day
   // so answering its quiz (then returning) reflects immediately.
+  // Skip if goToDate just ran (in-place navigation already refreshed everything).
   const didFocus = useRef(false);
   useFocusEffect(
     useCallback(() => {
       refreshSettings();
-      if (didFocus.current) refreshCurrent(true);
-      else didFocus.current = true;
+      if (didFocus.current) {
+        // If a nav arrow was pressed recently, the data is already fresh — skip.
+        if (Date.now() - navTimestampRef.current < 2000) return;
+        refreshCurrent(true);
+      } else {
+        didFocus.current = true;
+      }
     }, [refreshSettings, refreshCurrent])
   );
 
@@ -224,6 +234,7 @@ export default function TodayScreen({ navigation }: Props) {
         onRead={handleRead}
         onWatch={handleWatch}
         onOpenQuiz={() => navigation.navigate('Quiz', { dayId: day.id })}
+        onViewResults={() => navigation.navigate('DayResults', { dayId: day.id, date: day.date_assigned })}
       />
     </ScrollView>
   );

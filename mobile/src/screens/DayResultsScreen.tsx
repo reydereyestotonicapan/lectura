@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { HistoryStackParamList } from '../navigation/HistoryStack';
+import { TodayStackParamList } from '../navigation/types';
 import { getResponses } from '../api/readings';
 import { UserResponse } from '../types/api';
 import { useTheme, Spacing } from '../theme';
@@ -9,7 +11,9 @@ import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import ResponseCard from '../components/ResponseCard';
 
-type Props = NativeStackScreenProps<HistoryStackParamList, 'DayResults'>;
+type HistoryProps = NativeStackScreenProps<HistoryStackParamList, 'DayResults'>;
+type TodayProps = NativeStackScreenProps<TodayStackParamList, 'DayResults'>;
+type Props = HistoryProps | TodayProps;
 
 function capitalizedDate(dateStr: string) {
   const s = new Date(dateStr + 'T00:00:00').toLocaleDateString('es-ES', {

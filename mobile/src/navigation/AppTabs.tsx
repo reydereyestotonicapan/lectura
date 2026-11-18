@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppTabsParamList } from './types';
 import TodayStack from './TodayStack';
 import AccountStack from './AccountStack';
-import HistoryStack from './HistoryStack';
 import KidsStack from './KidsStack';
 import { useTheme, createShadows } from '../theme';
 
@@ -56,13 +55,6 @@ export default function AppTabs() {
         component={TodayStack}
         options={{
           tabBarIcon: ({ focused }) => <TabIcon emoji="📖" focused={focused} colors={colors} />,
-        }}
-      />
-      <Tab.Screen
-        name="History"
-        component={HistoryStack}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} colors={colors} />,
         }}
       />
       <Tab.Screen

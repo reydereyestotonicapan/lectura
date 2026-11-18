@@ -42,6 +42,8 @@ interface Props {
   onRead: (chapter: ChapterWithProgress) => void;
   onWatch: (chapter: ChapterWithProgress) => void;
   onOpenQuiz: () => void;
+  /** Navigate to the day's detailed results (responses list). */
+  onViewResults?: () => void;
 }
 
 /**
@@ -61,6 +63,7 @@ export default function DayReadingBody({
   onRead,
   onWatch,
   onOpenQuiz,
+  onViewResults,
 }: Props) {
   const { colors, gradients, isDark } = useTheme();
   const shadows = createShadows(isDark);
@@ -156,15 +159,18 @@ export default function DayReadingBody({
       {/* Quiz CTA */}
       <AnimatedFade delay={240} style={styles.ctaWrap}>
         {alreadyAnswered ? (
-          <View style={[styles.completedCard, { backgroundColor: colors.successBg, borderColor: colors.successBorder }]}>
+          <TouchableOpacity
+            style={[styles.completedCard, { backgroundColor: colors.successBg, borderColor: colors.successBorder }]}
+            onPress={onViewResults}
+            activeOpacity={0.8}
+            accessibilityLabel="Ver resultados"
+          >
             <Text style={styles.completedIcon}>🎉</Text>
-            <View>
+            <View style={styles.completedBody}>
               <Text style={[styles.completedTitle, { color: colors.success }]}>¡Preguntas completadas!</Text>
-              <Text style={[styles.completedSub, { color: colors.success }]}>
-                {isToday ? 'Vuelve mañana con una nueva lectura.' : 'Ya respondiste las preguntas de este día.'}
-              </Text>
+              <Text style={[styles.completedSub, { color: colors.success }]}>Ver resultados  →</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ) : totalQuestions > 0 ? (
           <TouchableOpacity style={[styles.quizCta, shadows.gold]} onPress={onOpenQuiz} activeOpacity={0.88}>
             <LinearGradient
@@ -308,6 +314,9 @@ const styles = StyleSheet.create({
   },
   completedIcon: {
     fontSize: 28,
+  },
+  completedBody: {
+    flex: 1,
   },
   completedTitle: {
     fontSize: 15,

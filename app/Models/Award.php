@@ -18,18 +18,22 @@ class Award extends Model
         'disk',
         'directory',
         'category',
-        'days_count'
+        'days_count',
     ];
+
     protected static function booted(): void
     {
         static::creating(function (Award $award) {
-            $award->month_date = now()->format('Y-m-d');
+            // Fallback only: callers should pass an explicit month_date so the
+            // awarded month never depends on when the job happens to run.
+            $award->month_date ??= now()->format('Y-m-d');
         });
 
         static::created(function (Award $award) {
             GenerateAward::dispatch($award);
         });
     }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

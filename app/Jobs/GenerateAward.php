@@ -34,7 +34,9 @@ class GenerateAward implements ShouldQueue
     public function handle(): void
     {
         $pdf = Pdf::loadView('emails.design-award', ['award' => $this->award]);
-        $filename = Carbon::now()->locale('es')->monthName.'-'.$this->award->user->name.self::FILE_EXTENSION;
+        // Filename follows the awarded month (month_date), not now(), so a late
+        // run doesn't produce e.g. "julio-*.pdf" for a June award.
+        $filename = Carbon::parse($this->award->month_date)->locale('es')->monthName.'-'.$this->award->user->name.self::FILE_EXTENSION;
         $pdfContent = $pdf->output();
         Storage::disk(self::DISK)->put(self::DIRECTORY. '/' . $filename, $pdfContent);
         $this->award->update([

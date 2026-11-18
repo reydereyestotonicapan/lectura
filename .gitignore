@@ -27,3 +27,5 @@ supervisord.pid
 storage/app/firebase/
 CLAUDE.md
 .claude
+/.kiro
+/mobile/*.apk

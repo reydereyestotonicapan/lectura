@@ -61,7 +61,7 @@ class ActivityResource extends Resource
                                     ->image()
                                     ->disk('s3')
                                     ->directory('activities')
-                                    ->visibility('public')
+                                    ->visibility('private')
                                     ->imagePreviewHeight('300')
                                     ->panelLayout('integrated')
                                     ->uploadingMessage('Subiendo imagen...')
